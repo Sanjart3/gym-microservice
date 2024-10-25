@@ -1,0 +1,25 @@
+server:
+  port: 8081
+
+# DB configuration
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/GYM_LOCAL
+    username: local_user
+    password: local_pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Prometheus metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  endpoint:
+    health:
+      show-details: always
