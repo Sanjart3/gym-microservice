@@ -2,6 +2,9 @@ package org.example.services.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.converters.TrainingConverter;
+import org.example.dto.training.TrainingDto;
+import org.example.dto.training.TrainingEventDto;
 import org.example.repositories.TrainingRepository;
 import org.example.dto.AuthDto;
 import org.example.entities.Training;
@@ -25,6 +28,7 @@ public class TrainingServiceImpl implements TrainingService {
     private TraineeService traineeService;
     private TrainerService trainerService;
     private TrainingValidation trainingValidation;
+    private TrainingConverter trainingConverter;
     @Autowired
     public void setTrainingValidation(TrainingValidation trainingValidation) {
         this.trainingValidation = trainingValidation;
@@ -36,6 +40,10 @@ public class TrainingServiceImpl implements TrainingService {
     @Autowired
     public void setTrainerService(TrainerService trainerService) {
         this.trainerService = trainerService;
+    }
+    @Autowired
+    public void setTrainingConverter(TrainingConverter trainingConverter) {
+        this.trainingConverter = trainingConverter;
     }
 
     @Override
@@ -49,16 +57,17 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public Training save(Training training, String traineeUsername, String trainerUsername, AuthDto authDto) {
+    public TrainingEventDto save(TrainingDto trainingDto, String traineeUsername, String trainerUsername) {
         try{
-            training.setTrainee(traineeService.findByUsername(authDto, traineeUsername));
-            training.setTrainer(trainerService.findByUsername(authDto, trainerUsername));
+            Training training = trainingConverter.toTraining(trainingDto);
+            training.setTrainee(traineeService.findByUsername(traineeUsername));
+            training.setTrainer(trainerService.findByUsername(trainerUsername));
             trainingValidation.isValidForCreate(training);  //checks for validation, and throws exception for invalid parameters
             Training savedTraining = trainingRepository.save(training);
             LOGGER.info("Saved training: {}", savedTraining);
-            return savedTraining;
+            return trainingConverter.fromTrainingToTrainingEventDto(savedTraining);
         } catch (ValidatorException e) {
-            LOGGER.warn("Invalid training: {}", training, e);
+            LOGGER.warn("Invalid training: {}", trainingDto, e);
             throw e;
         }
     }

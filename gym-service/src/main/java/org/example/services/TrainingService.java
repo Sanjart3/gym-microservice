@@ -1,6 +1,8 @@
 package org.example.services;
 
 import org.example.dto.AuthDto;
+import org.example.dto.training.TrainingDto;
+import org.example.dto.training.TrainingEventDto;
 import org.example.entities.Training;
 
 import java.util.List;
@@ -8,5 +10,5 @@ import java.util.List;
 public interface TrainingService {
     List<Training> findAll();
     Training findById(Long id);
-    Training save(Training training, String traineeUsername, String trainerUsername, AuthDto authDto);
+    TrainingEventDto save(TrainingDto trainingDto, String traineeUsername, String trainerUsername);
 }

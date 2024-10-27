@@ -77,7 +77,7 @@ public class TrainerController {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PUT /api/trainer/{}/change-password: Trainer change password initiated", transactionId, username);
         try {
-            trainerService.changePassword(converter.fromPasswordChangeDtoToAuthDto(passwordChangeDto), passwordChangeDto);
+            trainerService.changePassword(passwordChangeDto);
             LOGGER.info("[Transaction id: {}] PUT /api/trainer/{}/change-password: Status code: 200 OK. Trainer change password successful for username: {}", transactionId, username, username);
             return ResponseEntity.ok("Password changed successfully");
         } catch (NotFoundException e) {
@@ -95,13 +95,11 @@ public class TrainerController {
     })
     @GetMapping("{username}/profile")
     public ResponseEntity<TrainerDto> profile(
-            @PathVariable("username") String username,
-            @RequestHeader String authUsername,
-            @RequestHeader String authPassword) {
+            @PathVariable("username") String username) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] GET /api/trainer/{}/profile: Trainer profile initiated", transactionId, username);
         try {
-            Trainer trainer = trainerService.findByUsername(converter.toAuthDto(authUsername, authPassword), username);
+            Trainer trainer = trainerService.findByUsername(username);
             LOGGER.info("[Transaction id: {}] GET /api/trainer/{}/profile: Status code: 200 OK. Trainer profile successful for username: {}", transactionId, username, username);
             return ResponseEntity.ok(converter.toDto(trainer));
         } catch (NotFoundException e) {
@@ -121,13 +119,11 @@ public class TrainerController {
     @PutMapping("{username}/update-profile")
     public ResponseEntity<TrainerDto> updateProfile(
             @PathVariable String username,
-            @RequestHeader String authUsername,
-            @RequestHeader String authPassword,
             @RequestBody TrainerUpdateRequestDto trainerUpdateRequestDto) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PUT /api/trainer/{}/update-profile: Trainer profile update initiated", transactionId, username);
         try {
-            Trainer trainer = trainerService.update(converter.toAuthDto(authUsername, authPassword), converter.fromTrainerUpdateRequestToTrainer(trainerUpdateRequestDto));
+            Trainer trainer = trainerService.update(converter.fromTrainerUpdateRequestToTrainer(trainerUpdateRequestDto));
             LOGGER.info("[Transaction id: {}] PUT /api/trainer/{}/update-profile: Status code: 200 OK. Trainer profile update successful for username: {}", transactionId, username, username);
             return ResponseEntity.ok(converter.toDto(trainer));
         } catch (NotFoundException te) {
@@ -149,12 +145,11 @@ public class TrainerController {
     })
     @GetMapping("{username}/get-trainings")
     public ResponseEntity<?> getTrainerTrainings(@PathVariable String username,
-                                                 @RequestHeader String authUsername, @RequestHeader String authPassword,
                                                  @RequestParam LocalDate fromDate, @RequestParam LocalDate toDate, @RequestParam String trainingType) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] GET /api/trainer/{}/get-trainings: Trainer trainings retrieval initiated", transactionId, username);
         try {
-            List<Training> trainings = trainerService.getTrainings(converter.toAuthDto(authUsername, authPassword), converter.toCriteriaDto(fromDate, toDate, trainingType), username);
+            List<Training> trainings = trainerService.getTrainings(converter.toCriteriaDto(fromDate, toDate, trainingType), username);
             LOGGER.info("[Transaction id: {}] GET /api/trainer/{}/get-trainings: Status code: 200 OK. Training list retrieve for username: {}", transactionId, username, username);
             return ResponseEntity.ok().body(trainings);
         } catch (NotFoundException e) {
@@ -174,13 +169,11 @@ public class TrainerController {
     @PatchMapping("{username}/change-status")
     public ResponseEntity<Void> changeStatus(
             @PathVariable String username,
-            @RequestHeader String authUsername,
-            @RequestHeader String authPassword,
             @RequestBody Boolean newStatus) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PATCH /api/trainer/{}/change-status: Trainer status change initiated", transactionId, username);
         try {
-            trainerService.changeStatus(converter.toAuthDto(authUsername, authPassword), username, newStatus);
+            trainerService.changeStatus(username, newStatus);
             LOGGER.info("[Transaction id: {}] PATCH /api/trainer/{}/change-status: Status code: 200 OK. Status change for username: {}", transactionId, username, username);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
