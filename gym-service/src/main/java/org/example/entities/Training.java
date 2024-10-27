@@ -4,6 +4,7 @@ import lombok.Data;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Objects;
 
 @Entity
@@ -34,6 +35,12 @@ public class Training {
 
     @Column(name = "training_duration", nullable = false)
     private int trainingDuration;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
+    @Column(name = "deleted_date")
+    private Date deletedDate;
 
     public Training(Long id, Trainee trainee, Trainer trainer, String trainingName, TrainingType trainingType, LocalDate trainingDate, int trainingDuration) {
         this.id = id;

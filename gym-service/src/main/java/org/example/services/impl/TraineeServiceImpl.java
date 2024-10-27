@@ -25,6 +25,10 @@ import java.util.Optional;
 public class TraineeServiceImpl implements TraineeService {
 
     private static final Logger LOGGER = LogManager.getLogger(TraineeServiceImpl.class);
+
+    @Autowired
+    private EurekaClient eurekaClient;
+
     @Autowired
     private TraineeRepository traineeRepository;
 

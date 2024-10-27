@@ -1,12 +1,15 @@
 package org.example.controllers;
 
+import feign.FeignException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.controllers.client.TrainingEventClient;
 import org.example.converters.TraineeConverter;
 import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
@@ -18,6 +21,7 @@ import org.example.entities.Trainee;
 import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.example.services.TraineeService;
+import org.example.services.TrainingService;
 import org.example.services.impl.TrainingServiceImpl;
 import org.example.utils.ApiDescription;
 import org.example.utils.TransactionLogger;
@@ -32,20 +36,23 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/api/trainee", consumes = {"application/json"}, produces = {"application/json", "application/XML"})
 @Tag(name = ApiDescription.TRAINEE_TAG, description = "The trainee api")
 public class TraineeController {
     private final Logger LOGGER = LogManager.getLogger(TraineeController.class);
+
+    private TrainingEventClient trainingEventClient;
     private final TraineeConverter traineeConverter;
     private final TraineeService traineeService;
-    private final TrainingServiceImpl trainingServiceImpl;
+    private final TrainingService trainingService;
 
     @Autowired
-    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingServiceImpl) {
+    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingService) {
         this.traineeConverter = traineeConverter;
         this.traineeService = traineeService;
-        this.trainingServiceImpl = trainingServiceImpl;
+        this.trainingService = trainingService;
     }
 
 
@@ -246,6 +253,12 @@ public class TraineeController {
         }
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Add Training", description = "Adds a training to the trainee's profile.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Training added successfully"),
+            @ApiResponse(responseCode = "400", description = "JSON is invalid and has some error in validation"),
+    })
     @PostMapping("{username}/add-training/{trainer_username}")
     public ResponseEntity addTraining(@RequestBody TrainingDto trainingDto,
                                       @PathVariable("username") String traineeUsername,
@@ -253,12 +266,35 @@ public class TraineeController {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] POST /api/trainee/{}/add-training", transactionId, trainingDto);
         try{
-            TrainingEventDto trainingEventDto = trainingServiceImpl.save(trainingDto, traineeUsername, trainerUsername);
+            TrainingEventDto trainingEventDto = trainingService.save(trainingDto, traineeUsername, trainerUsername);
             LOGGER.info("Transaction id: {}] POST /api/trainee/{}/add-training Add training has been successful", transactionId, traineeUsername);
+            // Working with Training event
+            addTrainingEvent(trainingEventDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(trainingEventDto);
         } catch (NotFoundException e) {
             LOGGER.error("[Transaction id: {}] POST /api/trainee/{}/add training Add training has been failed", transactionId, traineeUsername);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    public void addTrainingEvent(TrainingEventDto trainingEventDto){
+        try{
+            trainingEventClient.createTraining(trainingEventDto);
+        } catch (FeignException e) {
+            log.warn("Tracking service is not available");
+        }
+    }
+
+    @DeleteMapping("/{username}/training")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Cancel Training", description = "Cancels a training")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Training deleted successfully"),
+    })
+    public void cancelTraining(@RequestBody long trainingId,
+                               @PathVariable("username") String username) {
+
+        Trainee trainee = traineeService.findByUsername(username);
+        trainingService.cancelTraining(trainee.getUser().getUsername(), trainingId);
     }
 }
