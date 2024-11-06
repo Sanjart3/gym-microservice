@@ -19,6 +19,14 @@ public class TrainingConverter extends AbstractConverter<Training, TrainingDto> 
         return modelMapper.map(trainingDto, Training.class);
     }
 
+    public Training fromTrainingCreateRequestToTraining(TrainingCreateRequest trainingCreateRequest) {
+        Training training = new Training();
+        training.setTrainingName(trainingCreateRequest.getTrainingName());
+        training.setTrainingDate(trainingCreateRequest.getTrainingDate());
+        training.setTrainingDuration(trainingCreateRequest.getTrainingDuration());
+        return training;
+    }
+
     public TrainingEventDto fromTrainingToTrainingEventDto(Training training) {
         TrainingEventDto trainingEvent = new TrainingEventDto();
         Trainer trainer = training.getTrainer();

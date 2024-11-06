@@ -1,5 +1,6 @@
 package org.example.services.impl;
 
+import com.netflix.discovery.EurekaClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.repositories.TraineeRepository;
@@ -141,6 +142,8 @@ public class TraineeServiceImpl implements TraineeService {
     public List<Training> getTrainings(String username, CriteriaDto criteriaDto) {
         if (traineeRepository.findByUsername(username).isPresent()) {
             return traineeRepository.searchTraineeTraining(criteriaDto, username);
+        } else {
+            throw new NotFoundException("Trainee", username);
         }
     }
 

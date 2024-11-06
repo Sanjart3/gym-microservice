@@ -3,6 +3,8 @@ server:
 
 # DB configuration
 spring:
+  application:
+    name: gym-service
   datasource:
     url: jdbc:postgresql://localhost:5432/GYM
     username: postgres
@@ -23,3 +25,18 @@ management:
   endpoint:
     health:
       show-details: always
+
+# Eureka
+eureka:
+  client:
+    service-url:  # Corrected indentation
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000

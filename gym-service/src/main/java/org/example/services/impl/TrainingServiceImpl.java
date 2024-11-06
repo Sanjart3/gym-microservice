@@ -60,9 +60,8 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public TrainingEventDto save(TrainingDto trainingDto, String traineeUsername, String trainerUsername) {
+    public TrainingEventDto save(Training training, String traineeUsername, String trainerUsername) {
         try{
-            Training training = trainingConverter.toTraining(trainingDto);
             training.setTrainee(traineeService.findByUsername(traineeUsername));
             training.setTrainer(trainerService.findByUsername(trainerUsername));
             trainingValidation.isValidForCreate(training);  //checks for validation, and throws exception for invalid parameters
@@ -70,7 +69,7 @@ public class TrainingServiceImpl implements TrainingService {
             LOGGER.info("Saved training: {}", savedTraining);
             return trainingConverter.fromTrainingToTrainingEventDto(savedTraining);
         } catch (ValidatorException e) {
-            LOGGER.warn("Invalid training: {}", trainingDto, e);
+            LOGGER.warn("Invalid training: {}", training, e);
             throw e;
         }
     }

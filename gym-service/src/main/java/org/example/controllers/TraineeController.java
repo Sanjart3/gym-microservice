@@ -15,7 +15,6 @@ import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
 import org.example.dto.trainee.TraineeDto;
 import org.example.dto.trainee.TraineeUpdateRequestDto;
-import org.example.dto.training.TrainingDto;
 import org.example.dto.training.TrainingEventDto;
 import org.example.entities.Trainee;
 import org.example.entities.Trainer;
@@ -260,13 +259,13 @@ public class TraineeController {
             @ApiResponse(responseCode = "400", description = "JSON is invalid and has some error in validation"),
     })
     @PostMapping("{username}/add-training/{trainer_username}")
-    public ResponseEntity addTraining(@RequestBody TrainingDto trainingDto,
+    public ResponseEntity addTraining(@RequestBody Training training,
                                       @PathVariable("username") String traineeUsername,
                                       @PathVariable("trainer_username") String trainerUsername){
         String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] POST /api/trainee/{}/add-training", transactionId, trainingDto);
+        LOGGER.info("[Transaction id: {}] POST /api/trainee/{}/add-training", transactionId, training);
         try{
-            TrainingEventDto trainingEventDto = trainingService.save(trainingDto, traineeUsername, trainerUsername);
+            TrainingEventDto trainingEventDto = trainingService.save(training, traineeUsername, trainerUsername);
             LOGGER.info("Transaction id: {}] POST /api/trainee/{}/add-training Add training has been successful", transactionId, traineeUsername);
             // Working with Training event
             addTrainingEvent(trainingEventDto);
