@@ -10,19 +10,17 @@ import org.example.entities.Training;
 import java.util.List;
 
 public interface TraineeService {
-    Trainee findByUsername(AuthDto auth, String username);
-    void changePassword(AuthDto auth, PasswordChangeDto passwordChangeDto);
+    Trainee findByUsername(String username);
+    void changePassword(PasswordChangeDto passwordChangeDto);
 
-    void changeStatus(AuthDto auth, String username, boolean status);
+    void changeStatus(String username, boolean status);
     AuthDto save(Trainee trainee);
-    Trainee update(AuthDto auth, Trainee trainee);
-    Boolean deleteByUsername(AuthDto auth, String username);
+    Trainee update(Trainee trainee, String username);
+    Boolean deleteByUsername(String username);
 
-    List<Trainer> findUnassignedTrainers(AuthDto auth, String username);
-    List<Trainer> updateTrainerList(AuthDto auth, String username, List<Trainer> trainers);
-    List<Training> getTrainings(AuthDto auth, String username, CriteriaDto criteriaDto);
-
-    void authenticate(AuthDto auth);
+    List<Trainer> findUnassignedTrainers(String username);
+    List<Trainer> updateTrainerList(String username, List<Trainer> trainers);
+    List<Training> getTrainings(String username, CriteriaDto criteriaDto);
 
     String getUsername(String basicUsername);
 }

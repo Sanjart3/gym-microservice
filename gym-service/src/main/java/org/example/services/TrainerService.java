@@ -9,12 +9,11 @@ import org.example.entities.Training;
 import java.util.List;
 
 public interface TrainerService {
-    Trainer findByUsername(AuthDto auth, String username);
-    void changePassword(AuthDto auth, PasswordChangeDto passwordChangeDto);
-    void changeStatus(AuthDto auth, String username, boolean status);
+    Trainer findByUsername(String username);
+    void changePassword(PasswordChangeDto passwordChangeDto);
+    void changeStatus(String username, boolean status);
     AuthDto save(Trainer trainer);
-    Trainer update(AuthDto auth, Trainer trainer);
-    List<Training> getTrainings(AuthDto auth, CriteriaDto criteriaDto, String username);
-    void authenticate(AuthDto auth);
+    Trainer update(Trainer trainer);
+    List<Training> getTrainings(CriteriaDto criteriaDto, String username);
     String getUsername(String basicUsername);
 }

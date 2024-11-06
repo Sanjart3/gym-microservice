@@ -1,5 +1,6 @@
 package org.example.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthDto;
 import org.example.utils.JWTUtil;
 import org.example.utils.exception.AuthenticationException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController("auth")
 public class AuthController {
 
@@ -28,6 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthDto authDto) throws Exception {
         try {
+            log.info("Authenticating user: {}", authDto.getUsername());
             authenticationProvider.authenticate(
                     new UsernamePasswordAuthenticationToken(authDto.getUsername(), authDto.getPassword())
             );

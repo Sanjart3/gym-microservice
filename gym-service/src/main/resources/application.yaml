@@ -1,3 +1,42 @@
+server:
+  port: 8080
+
+# DB configuration
 spring:
-  profiles:
-    active: dev
+  application:
+    name: gym-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/GYM
+    username: postgres
+    password: 2345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Prometheus metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Eureka
+eureka:
+  client:
+    service-url:  # Corrected indentation
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000

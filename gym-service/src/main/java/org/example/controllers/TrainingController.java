@@ -26,12 +26,11 @@ public class TrainingController {
     }
 
     @PostMapping("create-training")
-    public ResponseEntity<?> createTraining(@RequestHeader AuthDto authDto,
-                                         @RequestBody TrainingCreateRequest trainingCreateRequest) {
+    public ResponseEntity<?> createTraining(@RequestBody TrainingCreateRequest trainingCreateRequest) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[TransactionId: {}] POST /api/training/create-training Create training initialized", transactionId);
         try{
-            trainingService.save(trainingConverter.fromTrainingCreateRequestToTraining(trainingCreateRequest), trainingCreateRequest.getTraineeUsername(), trainingCreateRequest.getTrainerUsername(), authDto);
+            trainingService.save(trainingConverter.fromTrainingCreateRequestToTraining(trainingCreateRequest), trainingCreateRequest.getTraineeUsername(), trainingCreateRequest.getTrainerUsername());
             LOGGER.info("[Transaction id: {}] POST /api/training/create-training: Status code 201 Created. Training creation completed", transactionId);
             return ResponseEntity.ok().build();
         } catch (ValidatorException ve){

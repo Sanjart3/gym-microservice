@@ -1,5 +1,6 @@
 package org.example.services.impl;
 
+import com.netflix.discovery.EurekaClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.repositories.TraineeRepository;
@@ -12,7 +13,6 @@ import org.example.entities.Training;
 import org.example.services.TraineeService;
 import org.example.services.TrainerService;
 import org.example.utils.PasswordGenerator;
-import org.example.utils.exception.AuthenticationException;
 import org.example.utils.exception.NotFoundException;
 import org.example.utils.exception.ValidatorException;
 import org.example.utils.validation.impl.TraineeValidation;
@@ -26,6 +26,10 @@ import java.util.Optional;
 public class TraineeServiceImpl implements TraineeService {
 
     private static final Logger LOGGER = LogManager.getLogger(TraineeServiceImpl.class);
+
+    @Autowired
+    private EurekaClient eurekaClient;
+
     @Autowired
     private TraineeRepository traineeRepository;
 
@@ -38,53 +42,35 @@ public class TraineeServiceImpl implements TraineeService {
     private PasswordGenerator passwordGenerator;
 
     @Override
-    public Trainee findByUsername(AuthDto auth, String username) {
-        try{
-            authenticate(auth);
-            Optional<Trainee> trainee = traineeRepository.findByUsername(username);
-            if (trainee.isPresent()) {
-                return trainee.get();
-            } else {
-                LOGGER.error("Trainee not found");
-                throw new NotFoundException("Trainee", username);
-            }
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw new AuthenticationException(username);
+    public Trainee findByUsername(String username) {
+        Optional<Trainee> trainee = traineeRepository.findByUsername(username);
+        if (trainee.isPresent()) {
+            return trainee.get();
+        } else {
+            LOGGER.error("Trainee not found");
+            throw new NotFoundException("Trainee", username);
         }
     }
 
     @Override
-    public void changePassword(AuthDto auth, PasswordChangeDto passwordChangeDto) {
+    public void changePassword(PasswordChangeDto passwordChangeDto) {
         String username = passwordChangeDto.getUsername();
         Optional<Trainee> traineeOptional = traineeRepository.findByUsername(username);
         if (traineeOptional.isPresent()) {
-            try{
-                authenticate(auth);
-                Trainee trainee = traineeOptional.get();
-                trainee.getUser().setPassword(passwordChangeDto.getNewPassword());
-                traineeRepository.save(trainee);
-            } catch (AuthenticationException e) {
-                LOGGER.error(e.getMessage());
-                throw new AuthenticationException(username);
-            }
+            Trainee trainee = traineeOptional.get();
+            trainee.getUser().setPassword(passwordChangeDto.getNewPassword());
+            traineeRepository.save(trainee);
         } else {
             throw new NotFoundException("Trainee", username);
         }
     }
 
     @Override
-    public void changeStatus(AuthDto auth, String username, boolean status) {
+    public void changeStatus(String username, boolean status) {
         Optional<Trainee> traineeOptional = traineeRepository.findByUsername(username);
         if (traineeOptional.isPresent()) {
-            try {
-                authenticate(auth);
-                Trainee trainee = traineeOptional.get();
-                trainee.getUser().setIsActive(status);
-            } catch (AuthenticationException e) {
-                LOGGER.error(e.getMessage());
-                throw new AuthenticationException(username);
-            }
+            Trainee trainee = traineeOptional.get();
+            trainee.getUser().setIsActive(status);
         }
         throw new NotFoundException("Trainee", username);
     }
@@ -105,13 +91,11 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public Trainee update(AuthDto auth, Trainee trainee) {
-        String username = auth.getUsername();
+    public Trainee update(Trainee trainee, String username) {
         Optional<Trainee> traineeOptional = traineeRepository.findByUsername(username);
         if (traineeOptional.isPresent()) {
             try{
                 traineeValidation.isValidForUpdate(trainee); //checks for validation, and throws exception for invalid parameters
-                authenticate(auth);
                 Long id = traineeOptional.get().getId();
                 trainee.setId(id);
                 Trainee updatedTrainee = traineeRepository.save(trainee);
@@ -120,81 +104,49 @@ public class TraineeServiceImpl implements TraineeService {
             } catch (ValidatorException e) {
                 LOGGER.warn("Trainee not updated: {}", trainee, e);
                 throw e;
-            } catch (AuthenticationException e) {
-                LOGGER.error(e.getMessage());
-                throw new AuthenticationException(username);
             }
         }
         throw new NotFoundException("Trainee", username);
     }
 
     @Override
-    public Boolean deleteByUsername(AuthDto auth, String username) {
-        try{
-            authenticate(auth);
-            if (traineeRepository.findByUsername(username).isPresent()) {
-                return traineeRepository.deleteByUser_Username(username);
-            }
-            throw new NotFoundException("Trainee", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
+    public Boolean deleteByUsername(String username) {
+        if (traineeRepository.findByUsername(username).isPresent()) {
+            return traineeRepository.deleteByUser_Username(username);
         }
+        throw new NotFoundException("Trainee", username);
     }
 
 
     @Override
-    public List<Trainer> findUnassignedTrainers(AuthDto auth, String username) {
-        try {
-            authenticate(auth);
-            if (traineeRepository.findByUsername(username).isPresent()) {
-                return traineeRepository.findUnAssignedTrainersByUsername(username);
-            }
-            throw new NotFoundException("Trainee", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
+    public List<Trainer> findUnassignedTrainers(String username) {
+        if (traineeRepository.findByUsername(username).isPresent()) {
+            return traineeRepository.findUnAssignedTrainersByUsername(username);
         }
+        throw new NotFoundException("Trainee", username);
     }
 
     @Override
-    public List<Trainer> updateTrainerList(AuthDto auth, String username, List<Trainer> trainers) {
-        try {
-            authenticate(auth);
-            Optional<Trainee> trainee = traineeRepository.findByUsername(username);
-            if (trainee.isPresent()) {
-                trainers = trainers.stream().map(trainer -> trainerService.findByUsername(auth, trainer.getUser().getUsername())).toList();
-                trainee.get().setTrainers(trainers);
-                traineeRepository.save(trainee.get());
-                return trainers;
-            }
-            throw new NotFoundException("Trainee", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
+    public List<Trainer> updateTrainerList(String username, List<Trainer> trainers) {
+        Optional<Trainee> trainee = traineeRepository.findByUsername(username);
+        if (trainee.isPresent()) {
+            trainers = trainers.stream().map(trainer -> trainerService.findByUsername(trainer.getUser().getUsername())).toList();
+            trainee.get().setTrainers(trainers);
+            traineeRepository.save(trainee.get());
+            return trainers;
         }
+        throw new NotFoundException("Trainee", username);
     }
 
     @Override
-    public List<Training> getTrainings(AuthDto auth, String username, CriteriaDto criteriaDto) {
-        try {
-            authenticate(auth);
-            if (traineeRepository.findByUsername(username).isPresent()) {
-                return traineeRepository.searchTraineeTraining(criteriaDto, username);
-            }
+    public List<Training> getTrainings(String username, CriteriaDto criteriaDto) {
+        if (traineeRepository.findByUsername(username).isPresent()) {
+            return traineeRepository.searchTraineeTraining(criteriaDto, username);
+        } else {
             throw new NotFoundException("Trainee", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
         }
     }
 
-    @Override
-    public void authenticate(AuthDto auth) {
-        if(traineeRepository.findTraineeByUser_UsernameAndUser_Password(auth.getUsername(), auth.getPassword()).isEmpty()){
-            throw new AuthenticationException(auth.getUsername());
-        }
-    }
 
     @Override
     public String getUsername(String basicUsername) {

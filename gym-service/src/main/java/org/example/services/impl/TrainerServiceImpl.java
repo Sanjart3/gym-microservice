@@ -10,7 +10,6 @@ import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.example.services.TrainerService;
 import org.example.utils.PasswordGenerator;
-import org.example.utils.exception.AuthenticationException;
 import org.example.utils.exception.NotFoundException;
 import org.example.utils.exception.ValidatorException;
 import org.example.utils.validation.impl.TrainerValidation;
@@ -36,45 +35,27 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public Trainer findByUsername(AuthDto auth, String username) {
-        try {
-            authenticate(auth);
-            Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(username);
-            if (trainerOptional.isPresent()) {
-                return trainerOptional.get();
-            }
-            throw new NotFoundException("Trainer", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
-        }
-    }
-
-    @Override
-    public void changePassword(AuthDto auth, PasswordChangeDto passwordChangeDto) {
-        Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(auth.getUsername());
-        try {
-            authenticate(auth);
-            Trainer trainer = trainerOptional.get();
-            trainer.getUser().setPassword(passwordChangeDto.getNewPassword());
-            trainerRepository.save(trainer);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
-        }
-    }
-
-    @Override
-    public void changeStatus(AuthDto auth, String username, boolean status) {
+    public Trainer findByUsername(String username) {
         Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(username);
-        try {
-            authenticate(auth);
-            Trainer trainer = trainerOptional.get();
-            trainer.getUser().setIsActive(status);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
+        if (trainerOptional.isPresent()) {
+            return trainerOptional.get();
         }
+        throw new NotFoundException("Trainer", username);
+    }
+
+    @Override
+    public void changePassword(PasswordChangeDto passwordChangeDto) {
+        Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(passwordChangeDto.getUsername());
+        Trainer trainer = trainerOptional.get();
+        trainer.getUser().setPassword(passwordChangeDto.getNewPassword());
+        trainerRepository.save(trainer);
+    }
+
+    @Override
+    public void changeStatus(String username, boolean status) {
+        Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(username);
+        Trainer trainer = trainerOptional.get();
+        trainer.getUser().setIsActive(status);
     }
 
     @Override
@@ -94,18 +75,14 @@ public class TrainerServiceImpl implements TrainerService {
 
 
     @Override
-    public Trainer update(AuthDto auth, Trainer trainer) {
+    public Trainer update(Trainer trainer) {
         try {
-            authenticate(auth);
             trainerValidation.isValidForUpdate(trainer);  //checks for validation, and throws exception for invalid parameters
             Long id = trainerRepository.findIdByUser_Username(trainer.getUser().getUsername());
             trainer.setId(id);
             Trainer updatedTrainer = trainerRepository.save(trainer);
             LOGGER.info("Updated trainer {}", updatedTrainer);
             return updatedTrainer;
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
         } catch (ValidatorException e){
                 LOGGER.warn("Invalid trainer to update: {}", trainer, e);
                 throw e;
@@ -113,25 +90,13 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public List<Training> getTrainings(AuthDto auth, CriteriaDto criteriaDto, String username) {
-        try {
-            authenticate(auth);
-            if (trainerRepository.findByUser_Username(username).isPresent()) {
-                return trainerRepository.searchTrainerTraining(criteriaDto, username);
-            }
-            throw new NotFoundException("Trainer", username);
-        } catch (AuthenticationException e) {
-            LOGGER.error(e.getMessage());
-            throw e;
+    public List<Training> getTrainings(CriteriaDto criteriaDto, String username) {
+        if (trainerRepository.findByUser_Username(username).isPresent()) {
+            return trainerRepository.searchTrainerTraining(criteriaDto, username);
         }
+        throw new NotFoundException("Trainer", username);
     }
 
-    @Override
-    public void authenticate(AuthDto auth) {
-        if(trainerRepository.findByUser_UsernameAndUser_Password(auth.getUsername(), auth.getPassword()).isEmpty()){
-            throw new AuthenticationException(auth.getUsername());
-        }
-    }
 
     @Override
     public String getUsername(String basicUsername) {

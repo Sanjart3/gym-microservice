@@ -1,21 +1,27 @@
 package org.example.controllers;
 
+import feign.FeignException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.controllers.client.TrainingEventClient;
 import org.example.converters.TraineeConverter;
 import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
 import org.example.dto.trainee.TraineeDto;
 import org.example.dto.trainee.TraineeUpdateRequestDto;
+import org.example.dto.training.TrainingEventDto;
 import org.example.entities.Trainee;
 import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.example.services.TraineeService;
+import org.example.services.TrainingService;
+import org.example.services.impl.TrainingServiceImpl;
 import org.example.utils.ApiDescription;
 import org.example.utils.TransactionLogger;
 import org.example.utils.exception.AuthenticationException;
@@ -29,18 +35,23 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/api/trainee", consumes = {"application/json"}, produces = {"application/json", "application/XML"})
 @Tag(name = ApiDescription.TRAINEE_TAG, description = "The trainee api")
 public class TraineeController {
     private final Logger LOGGER = LogManager.getLogger(TraineeController.class);
+
+    private TrainingEventClient trainingEventClient;
     private final TraineeConverter traineeConverter;
     private final TraineeService traineeService;
+    private final TrainingService trainingService;
 
     @Autowired
-    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService) {
+    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingService) {
         this.traineeConverter = traineeConverter;
         this.traineeService = traineeService;
+        this.trainingService = trainingService;
     }
 
 
@@ -75,9 +86,8 @@ public class TraineeController {
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDto passwordChangeDto) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PUT /api/trainee/change-password: Trainee password change initiated", transactionId);
-        AuthDto auth = traineeConverter.fromPasswordChangeDtoToAuthDto(passwordChangeDto);
         try {
-            traineeService.changePassword(auth, passwordChangeDto);
+            traineeService.changePassword(passwordChangeDto);
             LOGGER.info("[Transaction id: {}] PUT /api/trainee/change-password: Status code: 200 OK", transactionId);
             return ResponseEntity.ok().body("Password changed successfully");
         } catch (NotFoundException e) {
@@ -94,13 +104,11 @@ public class TraineeController {
             @ApiResponse(responseCode = "404", description = ApiDescription.PROFILE_NOT_FOUND)
     })
     @GetMapping("{username}/profile")
-    public ResponseEntity<?> getProfile(@PathVariable String username,
-                                        @RequestHeader String authUsername,
-                                        @RequestHeader String authPassword) {
+    public ResponseEntity<?> getProfile(@PathVariable String username) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] GET /api/trainee/profile: Profile retrieval initiated for username: {}", transactionId, username);
         try {
-            Trainee trainee = traineeService.findByUsername(traineeConverter.toAuthDto(authUsername, authPassword), username);
+            Trainee trainee = traineeService.findByUsername(username);
             LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/profile: Status code: 200 OK. Profile retrieved for username: {}", transactionId, username, username);
             return ResponseEntity.ok().body(traineeConverter.toDto(trainee));
         } catch (NotFoundException e) {
@@ -119,13 +127,11 @@ public class TraineeController {
     })
     @PutMapping("{username}/update-profile")
     public ResponseEntity<?> updateProfile(@PathVariable String username,
-                                           @RequestHeader String authUsername,
-                                           @RequestHeader String authPassword,
                                            @RequestBody TraineeUpdateRequestDto traineeRequestDto){
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Trainee update profile initiated", transactionId, username);
         try {
-            Trainee updatedTrainee = traineeService.update(traineeConverter.toAuthDto(authUsername, authPassword), traineeConverter.updateRequestDtoToTrainee(traineeRequestDto));
+            Trainee updatedTrainee = traineeService.update(traineeConverter.updateRequestDtoToTrainee(traineeRequestDto), username);
             LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Status code: 200 OK. Profile updated for username: {}", transactionId, username, username);
             return ResponseEntity.ok().body(traineeConverter.toDto(updatedTrainee));
         } catch (NotFoundException e) {
@@ -145,13 +151,11 @@ public class TraineeController {
             @ApiResponse(responseCode = "404", description = ApiDescription.UNAUTHENTICATED_ACCESS)
     })
     @DeleteMapping("{username}/delete")
-    public ResponseEntity<Void> deleteProfile(@PathVariable String username,
-                                              @RequestHeader String authUsername,
-                                              @RequestHeader String authPassword) {
+    public ResponseEntity<Void> deleteProfile(@PathVariable String username) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] DELETE /api/trainee/{}/delete: Trainee delete initiated", transactionId, username);
         try {
-            traineeService.deleteByUsername(traineeConverter.toAuthDto(authUsername, authPassword), username);
+            traineeService.deleteByUsername(username);
             LOGGER.info("[Transaction id: {}] DELETE /api/trainee/{}/delete: Status code: 204 No Content. Trainee deleted for username: {}", transactionId, username, username);
             return ResponseEntity.noContent().build();
         } catch (NotFoundException e) {
@@ -168,13 +172,11 @@ public class TraineeController {
             @ApiResponse(responseCode = "401", description = ApiDescription.UNAUTHENTICATED_ACCESS)
     })
     @GetMapping("{username}/not-assigned-trainers")
-    public ResponseEntity<?> getNotAssignedTrainers(@PathVariable String username,
-                                                    @RequestHeader String authUsername,
-                                                    @RequestHeader String authPassword) {
+    public ResponseEntity<?> getNotAssignedTrainers(@PathVariable String username){
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/not-assigned-trainers: Retrieve not assigned trainers initiated", transactionId, username);
         try {
-            List<Trainer> trainerList = traineeService.findUnassignedTrainers(traineeConverter.toAuthDto(authUsername, authPassword), username);
+            List<Trainer> trainerList = traineeService.findUnassignedTrainers(username);
             LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/not-assigned-trainers: Status code: 200 OK. Not assigned trainers retrieved for username: {}", transactionId, username, username);
             return ResponseEntity.ok(trainerList);
         } catch (NotFoundException e) {
@@ -187,14 +189,11 @@ public class TraineeController {
 
     @PutMapping("{username}/update-trainers")
     public ResponseEntity<Object> updateTrainerList(@PathVariable String username,
-                                                     @RequestHeader String authUsername,
-                                                     @RequestHeader String authPassword,
                                                      @RequestBody List<Trainer> trainerList) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-trainers: Trainee trainer list update initiated", transactionId, username);
         try {
-            AuthDto authDto = traineeConverter.toAuthDto(authUsername, authPassword);
-            List<Trainer> trainers = traineeService.updateTrainerList(authDto, username, trainerList);
+            List<Trainer> trainers = traineeService.updateTrainerList(username, trainerList);
             LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-trainers: Status code: 200 OK. Trainer list updated for username: {}", transactionId, username, username);
             return ResponseEntity.ok().body(trainers);
         } catch (NotFoundException e) {
@@ -215,12 +214,11 @@ public class TraineeController {
     })
     @GetMapping("{username}/get-trainings")
     public ResponseEntity<?> getTraineeTrainings(@PathVariable String username,
-                                                 @RequestHeader String authUsername, @RequestHeader String authPassword,
-                                                 @RequestParam LocalDate fromDate, @RequestParam LocalDate toDate, @RequestParam String trainerName, @RequestParam String trainingType) {
+                                                 @RequestParam LocalDate fromDate, @RequestParam LocalDate toDate, @RequestParam String trainingType) {
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Retrieve trainings initiated", transactionId, username);
         try {
-            List<Training> trainings = traineeService.getTrainings(traineeConverter.toAuthDto(authUsername, authPassword), username, traineeConverter.toCriteriaDto(fromDate, toDate, trainingType));
+            List<Training> trainings = traineeService.getTrainings(username, traineeConverter.toCriteriaDto(fromDate, toDate, trainingType));
             LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Retrieve trainings was successful", transactionId, username);
             return ResponseEntity.ok().body(trainings);
         } catch (NotFoundException e) {
@@ -239,13 +237,11 @@ public class TraineeController {
     })
     @PatchMapping("{username}/change-status")
     public ResponseEntity<?> changeStatus(@PathVariable String username,
-                                          @RequestHeader String authUsername,
-                                          @RequestHeader String authPassword,
                                           @RequestBody Boolean newStatus){
         String transactionId = TransactionLogger.getTransactionId();
         LOGGER.info("[Transaction id: {}] PATCH /api/trainee/{}/change-status: Trainee change status initiated", transactionId, username);
         try {
-            traineeService.changeStatus(traineeConverter.toAuthDto(authUsername, authPassword), username, newStatus);
+            traineeService.changeStatus(username, newStatus);
             LOGGER.info("[Transaction id: {}] PATCH /api/trainee/{}/change-status: Status code: 200 OK. Status change for username: {}", transactionId, username, username);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
@@ -254,5 +250,50 @@ public class TraineeController {
         } finally {
             TransactionLogger.clear();
         }
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Add Training", description = "Adds a training to the trainee's profile.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Training added successfully"),
+            @ApiResponse(responseCode = "400", description = "JSON is invalid and has some error in validation"),
+    })
+    @PostMapping("{username}/add-training/{trainer_username}")
+    public ResponseEntity addTraining(@RequestBody Training training,
+                                      @PathVariable("username") String traineeUsername,
+                                      @PathVariable("trainer_username") String trainerUsername){
+        String transactionId = TransactionLogger.getTransactionId();
+        LOGGER.info("[Transaction id: {}] POST /api/trainee/{}/add-training", transactionId, training);
+        try{
+            TrainingEventDto trainingEventDto = trainingService.save(training, traineeUsername, trainerUsername);
+            LOGGER.info("Transaction id: {}] POST /api/trainee/{}/add-training Add training has been successful", transactionId, traineeUsername);
+            // Working with Training event
+            addTrainingEvent(trainingEventDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(trainingEventDto);
+        } catch (NotFoundException e) {
+            LOGGER.error("[Transaction id: {}] POST /api/trainee/{}/add training Add training has been failed", transactionId, traineeUsername);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    public void addTrainingEvent(TrainingEventDto trainingEventDto){
+        try{
+            trainingEventClient.createTraining(trainingEventDto);
+        } catch (FeignException e) {
+            log.warn("Tracking service is not available");
+        }
+    }
+
+    @DeleteMapping("/{username}/training")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Cancel Training", description = "Cancels a training")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Training deleted successfully"),
+    })
+    public void cancelTraining(@RequestBody long trainingId,
+                               @PathVariable("username") String username) {
+
+        Trainee trainee = traineeService.findByUsername(username);
+        trainingService.cancelTraining(trainee.getUser().getUsername(), trainingId);
     }
 }
