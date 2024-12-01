@@ -4,12 +4,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.utils.JWTUtil;
+import org.example.services.JWTService;
+import org.example.services.UserDetailsService;
 import org.example.utils.exception.UnAuthorizedException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -21,10 +22,15 @@ import java.util.Arrays;
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
+    private final JWTService jwtService;
 
-    public JwtTokenFilter(UserDetailsService userDetailsService) {
+    public JwtTokenFilter(@Lazy UserDetailsService userDetailsService, @Lazy JWTService jwtService) {
         this.userDetailsService = userDetailsService;
+        this.jwtService = jwtService;
     }
+
+    private static final String HEADER_NAME = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -38,8 +44,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        final String authHeader = request.getHeader(HEADER_NAME);
+        if (authHeader == null || !authHeader.startsWith(TOKEN_PREFIX)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setHeader("Message", "Token Not Found.");
             return;
@@ -47,7 +53,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         String username;
         try {
-            username = JWTUtil.decode(token);
+            username = jwtService.extractUserName(token);
         } catch (UnAuthorizedException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setHeader("Message", e.getMessage());

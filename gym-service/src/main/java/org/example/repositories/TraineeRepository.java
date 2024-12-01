@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface TraineeRepository extends JpaRepository<Trainee, Long>, UserTrainingRepository {
 
-    @Query("SELECT t FROM Trainee t JOIN User u WHERE u.username=:username")
+    @Query("SELECT t FROM Trainee t JOIN User u ON t.user=u WHERE u.username=:username")
     Optional<Trainee> findByUsername(@Param("username") String username);
 
     @Query("SELECT tr FROM Trainer tr WHERE tr NOT IN " +

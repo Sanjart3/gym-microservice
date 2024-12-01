@@ -2,6 +2,7 @@ package org.example.services.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.enums.RoleType;
 import org.example.repositories.TrainerRepository;
 import org.example.dto.AuthDto;
 import org.example.dto.CriteriaDto;
@@ -14,6 +15,7 @@ import org.example.utils.exception.NotFoundException;
 import org.example.utils.exception.ValidatorException;
 import org.example.utils.validation.impl.TrainerValidation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,8 @@ public class TrainerServiceImpl implements TrainerService {
     private static final Logger LOGGER = LogManager.getLogger(TrainerServiceImpl.class);
     @Autowired
     private PasswordGenerator passwordGenerator;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public void setTrainerValidation(TrainerValidation trainerValidation) {
@@ -62,11 +66,14 @@ public class TrainerServiceImpl implements TrainerService {
     public AuthDto save(Trainer trainer) {
         try{
             trainerValidation.isValidForCreate(trainer);  //checks for validation, and throws exception for invalid parameters
-            trainer.getUser().setUsername(trainer.getUser().getFirstName()+trainer.getUser().getLastName());
-            trainer.getUser().setPassword(passwordGenerator.generatePassword());
+            String username = getUsername(trainer.getUser().getFirstName()+trainer.getUser().getLastName());
+            String password = passwordGenerator.generatePassword();
+            trainer.getUser().setUsername(username);
+            trainer.getUser().setPassword(passwordEncoder.encode(password));
+            trainer.getUser().setRole(RoleType.ROLE_TRAINER);
             Trainer savedTrainer = trainerRepository.save(trainer);
             LOGGER.info("Saved trainer {}", savedTrainer);
-            return new AuthDto(savedTrainer.getUser().getUsername(), savedTrainer.getUser().getPassword());
+            return new AuthDto(username, password);
         } catch (ValidatorException e){
             LOGGER.warn("Invalid trainer to save: {}", trainer, e);
             throw e;

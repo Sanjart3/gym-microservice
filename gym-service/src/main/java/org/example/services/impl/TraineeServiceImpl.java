@@ -3,6 +3,7 @@ package org.example.services.impl;
 import com.netflix.discovery.EurekaClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.enums.RoleType;
 import org.example.repositories.TraineeRepository;
 import org.example.dto.AuthDto;
 import org.example.dto.CriteriaDto;
@@ -17,6 +18,7 @@ import org.example.utils.exception.NotFoundException;
 import org.example.utils.exception.ValidatorException;
 import org.example.utils.validation.impl.TraineeValidation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,6 +42,8 @@ public class TraineeServiceImpl implements TraineeService {
     private TrainerService trainerService;
     @Autowired
     private PasswordGenerator passwordGenerator;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Trainee findByUsername(String username) {
@@ -58,7 +62,7 @@ public class TraineeServiceImpl implements TraineeService {
         Optional<Trainee> traineeOptional = traineeRepository.findByUsername(username);
         if (traineeOptional.isPresent()) {
             Trainee trainee = traineeOptional.get();
-            trainee.getUser().setPassword(passwordChangeDto.getNewPassword());
+            trainee.getUser().setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
             traineeRepository.save(trainee);
         } else {
             throw new NotFoundException("Trainee", username);
@@ -79,11 +83,14 @@ public class TraineeServiceImpl implements TraineeService {
     public AuthDto save(Trainee trainee) {
         try {
             traineeValidation.isValidForCreate(trainee);  //checks for validation, and throws exception for invalid parameters
-            trainee.getUser().setUsername(getUsername(trainee.getUser().getFirstName()+trainee.getUser().getLastName()));
-            trainee.getUser().setPassword(passwordGenerator.generatePassword());
+            String username = getUsername(trainee.getUser().getFirstName()+trainee.getUser().getLastName());
+            String password = passwordGenerator.generatePassword();
+            trainee.getUser().setUsername(username);
+            trainee.getUser().setPassword(passwordEncoder.encode(password));
+            trainee.getUser().setRole(RoleType.ROLE_TRAINEE);
             Trainee createdTrainee = traineeRepository.save(trainee);
             LOGGER.info("Trainee created: {}", createdTrainee);
-            return new AuthDto(createdTrainee.getUser().getUsername(), createdTrainee.getUser().getPassword());
+            return new AuthDto(username, password);
         } catch (ValidatorException e) {
             LOGGER.warn("Trainee not created: {}", trainee, e);
             throw e;
