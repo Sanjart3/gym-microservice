@@ -278,7 +278,7 @@ public class TraineeController {
 
     public void addTrainingEvent(TrainingEventDto trainingEventDto){
         try{
-            trainingEventClient.createTraining(trainingEventDto);
+            trainingEventClient.addTrainingEvent(trainingEventDto);
         } catch (FeignException e) {
             log.warn("Tracking service is not available");
         }
