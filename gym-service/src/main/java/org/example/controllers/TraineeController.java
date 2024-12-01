@@ -37,7 +37,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/api/trainee", consumes = {"application/json"}, produces = {"application/json", "application/XML"})
+@RequestMapping(value = "/api/trainee", produces = {"application/json", "application/XML"})
 @Tag(name = ApiDescription.TRAINEE_TAG, description = "The trainee api")
 public class TraineeController {
     private final Logger LOGGER = LogManager.getLogger(TraineeController.class);

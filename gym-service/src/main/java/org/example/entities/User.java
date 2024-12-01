@@ -4,6 +4,8 @@ package org.example.entities;
 import lombok.Data;
 
 import jakarta.persistence.*;
+import org.example.enums.RoleType;
+
 import java.util.Objects;
 
 @Entity
@@ -23,6 +25,9 @@ public class User {
     private String password;
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private RoleType role;
 
     public User(String firstName, String lastName, String username, Boolean isActive) {
         this.firstName = firstName;
