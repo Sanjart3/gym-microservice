@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @FeignClient(name = "training-event", configuration = FeignClientConfig.class)
 public interface TrainingEventClient {
-    @RequestMapping("training/add")
+    @RequestMapping("event")
     void addTrainingEvent(@RequestBody TrainingEventDto trainingEventDTO);
 }
