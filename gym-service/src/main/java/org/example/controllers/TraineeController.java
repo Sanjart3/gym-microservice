@@ -42,13 +42,14 @@ import java.util.List;
 public class TraineeController {
     private final Logger LOGGER = LogManager.getLogger(TraineeController.class);
 
-    private TrainingEventClient trainingEventClient;
+    private final TrainingEventClient trainingEventClient;
     private final TraineeConverter traineeConverter;
     private final TraineeService traineeService;
     private final TrainingService trainingService;
 
     @Autowired
-    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingService) {
+    public TraineeController(TrainingEventClient trainingEventClient, TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingService) {
+        this.trainingEventClient = trainingEventClient;
         this.traineeConverter = traineeConverter;
         this.traineeService = traineeService;
         this.trainingService = trainingService;
@@ -278,9 +279,9 @@ public class TraineeController {
 
     public void addTrainingEvent(TrainingEventDto trainingEventDto){
         try{
-            trainingEventClient.createTraining(trainingEventDto);
+            trainingEventClient.addTrainingEvent(trainingEventDto);
         } catch (FeignException e) {
-            log.warn("Tracking service is not available");
+            log.warn("Tracking service is not available: " + e.getMessage());
         }
     }
 
