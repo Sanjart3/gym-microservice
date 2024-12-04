@@ -28,7 +28,7 @@ public class WebSecurityConfig {
     static final String[] AUTH_WHITELIST = {"/api/trainer/sign-up", "/api/trainee/sign-up", "/auth/login"};
 
     @Autowired
-    public WebSecurityConfig(@Lazy UserDetailsService userDetailsService, @Lazy JwtTokenFilter jwtTokenFilter) {
+    public WebSecurityConfig(UserDetailsService userDetailsService, JwtTokenFilter jwtTokenFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtTokenFilter = jwtTokenFilter;
     }

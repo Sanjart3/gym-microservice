@@ -1,4 +1,4 @@
-package org.example.utils.exception;
+package org.example.exception;
 
 public class AuthenticationException extends RuntimeException {
     public AuthenticationException(String username) {

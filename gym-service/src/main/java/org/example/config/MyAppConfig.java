@@ -18,4 +18,9 @@ public class MyAppConfig {
 
         return modelMapper;
     }
+
+    @Bean
+    public LogFilter logFilter(){
+        return new LogFilter();
+    }
 }

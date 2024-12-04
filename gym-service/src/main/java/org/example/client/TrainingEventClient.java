@@ -1,4 +1,4 @@
-package org.example.controllers.client;
+package org.example.client;
 
 import org.example.config.FeignClientConfig;
 import org.example.dto.training.TrainingEventDto;

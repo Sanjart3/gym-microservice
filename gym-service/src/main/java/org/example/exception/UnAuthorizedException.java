@@ -1,4 +1,4 @@
-package org.example.utils.exception;
+package org.example.exception;
 
 public class UnAuthorizedException extends RuntimeException {
     public UnAuthorizedException(String message) {

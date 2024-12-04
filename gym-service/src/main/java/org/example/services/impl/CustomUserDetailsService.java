@@ -1,13 +1,12 @@
 package org.example.services.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.example.config.CustomUserDetails;
 import org.example.dto.AuthDto;
 import org.example.entities.User;
 import org.example.repositories.UserRepository;
 import org.example.services.JWTService;
 import org.example.services.UserDetailsService;
-import org.example.utils.exception.NotFoundException;
+import org.example.exception.NotFoundException;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -50,7 +49,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                     authDto.getPassword()
             ));
         } catch (AuthenticationException e) {
-            throw new org.example.utils.exception.AuthenticationException("Invalid username or password");
+            throw new org.example.exception.AuthenticationException("Invalid username or password");
         }
         UserDetails userDetails = loadUserByUsername(authDto.getUsername());
         return jwtService.generateToken(userDetails);

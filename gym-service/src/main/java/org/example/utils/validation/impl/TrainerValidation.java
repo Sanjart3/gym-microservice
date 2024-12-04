@@ -2,7 +2,7 @@ package org.example.utils.validation.impl;
 
 import org.example.entities.Trainer;
 import org.example.entities.User;
-import org.example.utils.exception.ValidatorException;
+import org.example.exception.ValidatorException;
 import org.example.utils.validation.Validator;
 import org.springframework.stereotype.Component;
 

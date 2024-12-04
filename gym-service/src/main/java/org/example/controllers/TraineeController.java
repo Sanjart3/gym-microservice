@@ -7,9 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.example.controllers.client.TrainingEventClient;
+import org.example.client.TrainingEventClient;
 import org.example.converters.TraineeConverter;
 import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
@@ -23,14 +21,23 @@ import org.example.services.TraineeService;
 import org.example.services.TrainingService;
 import org.example.services.impl.TrainingServiceImpl;
 import org.example.utils.ApiDescription;
-import org.example.utils.TransactionLogger;
-import org.example.utils.exception.AuthenticationException;
-import org.example.utils.exception.NotFoundException;
-import org.example.utils.exception.ValidatorException;
+import org.example.exception.AuthenticationException;
+import org.example.exception.NotFoundException;
+import org.example.exception.ValidatorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,8 +47,6 @@ import java.util.List;
 @RequestMapping(value = "/api/trainee", produces = {"application/json", "application/XML"})
 @Tag(name = ApiDescription.TRAINEE_TAG, description = "The trainee api")
 public class TraineeController {
-    private final Logger LOGGER = LogManager.getLogger(TraineeController.class);
-
     private final TrainingEventClient trainingEventClient;
     private final TraineeConverter traineeConverter;
     private final TraineeService traineeService;
@@ -63,17 +68,14 @@ public class TraineeController {
     })
     @PostMapping("sign-up")
     public ResponseEntity<?> registerNewTrainee(@Parameter(description = "Created user object") @RequestBody TraineeDto traineeDto) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] POST /trainee/sign-up: Trainee sign-up initiated", transactionId);
+        log.info("POST /trainee/sign-up: Trainee sign-up initiated");
         try {
             AuthDto loginInfo = traineeService.save(traineeConverter.toEntity(traineeDto));
-            LOGGER.info("[Transaction id: {}] POST /api/trainee/sign-up  Status code: 201 Created", transactionId);
+            log.info("POST /api/trainee/sign-up  Status code: 201 Created");
             return ResponseEntity.status(HttpStatus.CREATED).body(loginInfo);
         } catch (ValidatorException ve){
-            LOGGER.error("[Transaction id: {}] POST /api/trainee/sign-up: Status code: 422 Unprocessable Trainee", transactionId, ve);
+            log.error("POST /api/trainee/sign-up: Status code: 422 Unprocessable Trainee", ve);
             return ResponseEntity.badRequest().body(ve);
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -85,17 +87,14 @@ public class TraineeController {
     })
     @PutMapping("change-password")
     public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDto passwordChangeDto) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] PUT /api/trainee/change-password: Trainee password change initiated", transactionId);
+        log.info("PUT /api/trainee/change-password: Trainee password change initiated");
         try {
             traineeService.changePassword(passwordChangeDto);
-            LOGGER.info("[Transaction id: {}] PUT /api/trainee/change-password: Status code: 200 OK", transactionId);
+            log.info("PUT /api/trainee/change-password: Status code: 200 OK");
             return ResponseEntity.ok().body("Password changed successfully");
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] PUT /api/trainee/change-password: Status code: 404 Not found", transactionId, e);
+            log.error("PUT /api/trainee/change-password: Status code: 404 Not found", e);
             return ResponseEntity.badRequest().body(e.getMessage());
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -106,17 +105,14 @@ public class TraineeController {
     })
     @GetMapping("{username}/profile")
     public ResponseEntity<?> getProfile(@PathVariable String username) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] GET /api/trainee/profile: Profile retrieval initiated for username: {}", transactionId, username);
+        log.info("[GET /api/trainee/profile: Profile retrieval initiated for username: {}", username);
         try {
             Trainee trainee = traineeService.findByUsername(username);
-            LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/profile: Status code: 200 OK. Profile retrieved for username: {}", transactionId, username, username);
+            log.info("GET /api/trainee/{}/profile: Status code: 200 OK. Profile retrieved for username: {}", username, username);
             return ResponseEntity.ok().body(traineeConverter.toDto(trainee));
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] GET /api/trainee/{}/profile: Status code: 404 Not Found for username: {}", transactionId, username, username);
+            log.error("GET /api/trainee/{}/profile: Status code: 404 Not Found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -129,20 +125,17 @@ public class TraineeController {
     @PutMapping("{username}/update-profile")
     public ResponseEntity<?> updateProfile(@PathVariable String username,
                                            @RequestBody TraineeUpdateRequestDto traineeRequestDto){
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Trainee update profile initiated", transactionId, username);
+        log.info("PUT /api/trainee/{}/update-profile: Trainee update profile initiated", username);
         try {
             Trainee updatedTrainee = traineeService.update(traineeConverter.updateRequestDtoToTrainee(traineeRequestDto), username);
-            LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Status code: 200 OK. Profile updated for username: {}", transactionId, username, username);
+            log.info("PUT /api/trainee/{}/update-profile: Status code: 200 OK. Profile updated for username: {}", username, username);
             return ResponseEntity.ok().body(traineeConverter.toDto(updatedTrainee));
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Status code: 404 Not found. No trainee found for username: {}", transactionId, username, username);
+            log.error("PUT /api/trainee/{}/update-profile: Status code: 404 Not found. No trainee found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (ValidatorException e) {
-            LOGGER.error("[Transaction id: {}] PUT /api/trainee/{}/update-profile: Status code: 422 Unprocessable Trainee. Not valid trainee to update for username: {}", transactionId, username, username);
+            log.error("PUT /api/trainee/{}/update-profile: Status code: 422 Unprocessable Trainee. Not valid trainee to update for username: {}", username, username);
             return ResponseEntity.unprocessableEntity().body(e.getMessage());
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -153,17 +146,14 @@ public class TraineeController {
     })
     @DeleteMapping("{username}/delete")
     public ResponseEntity<Void> deleteProfile(@PathVariable String username) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] DELETE /api/trainee/{}/delete: Trainee delete initiated", transactionId, username);
+        log.info("DELETE /api/trainee/{}/delete: Trainee delete initiated", username);
         try {
             traineeService.deleteByUsername(username);
-            LOGGER.info("[Transaction id: {}] DELETE /api/trainee/{}/delete: Status code: 204 No Content. Trainee deleted for username: {}", transactionId, username, username);
+            log.info("DELETE /api/trainee/{}/delete: Status code: 204 No Content. Trainee deleted for username: {}", username, username);
             return ResponseEntity.noContent().build();
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] DELETE /api/trainee/{}/delete: Status code: 404 Not found. No trainee found for username: {}", transactionId, username, username);
+            log.error("DELETE /api/trainee/{}/delete: Status code: 404 Not found. No trainee found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -174,37 +164,31 @@ public class TraineeController {
     })
     @GetMapping("{username}/not-assigned-trainers")
     public ResponseEntity<?> getNotAssignedTrainers(@PathVariable String username){
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/not-assigned-trainers: Retrieve not assigned trainers initiated", transactionId, username);
+        log.info("GET /api/trainee/{}/not-assigned-trainers: Retrieve not assigned trainers initiated", username);
         try {
             List<Trainer> trainerList = traineeService.findUnassignedTrainers(username);
-            LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/not-assigned-trainers: Status code: 200 OK. Not assigned trainers retrieved for username: {}", transactionId, username, username);
+            log.info("GET /api/trainee/{}/not-assigned-trainers: Status code: 200 OK. Not assigned trainers retrieved for username: {}", username, username);
             return ResponseEntity.ok(trainerList);
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] GET /api/trainee/{}/not-assigned-trainers: Status code: 404. Trainee not found for username: {}", transactionId, username, username);
+            log.error("GET /api/trainee/{}/not-assigned-trainers: Status code: 404. Trainee not found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
     @PutMapping("{username}/update-trainers")
     public ResponseEntity<Object> updateTrainerList(@PathVariable String username,
                                                      @RequestBody List<Trainer> trainerList) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-trainers: Trainee trainer list update initiated", transactionId, username);
+        log.info("PUT /api/trainee/{}/update-trainers: Trainee trainer list update initiated", username);
         try {
             List<Trainer> trainers = traineeService.updateTrainerList(username, trainerList);
-            LOGGER.info("[Transaction id: {}] PUT /api/trainee/{}/update-trainers: Status code: 200 OK. Trainer list updated for username: {}", transactionId, username, username);
+            log.info("PUT /api/trainee/{}/update-trainers: Status code: 200 OK. Trainer list updated for username: {}", username, username);
             return ResponseEntity.ok().body(trainers);
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] PUT /api/trainee/{}update-trainers: Status code: 404. Trainee not found for username: {}", transactionId, username, username);
+            log.error("PUT /api/trainee/{}update-trainers: Status code: 404. Trainee not found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (AuthenticationException e) {
-            LOGGER.error("[Transaction id: {}] PUT /api/trainee/{}update-trainers: Status code: 401 UnAuthenticated. Could not authenticate for username: {}", transactionId, username, username);
+            log.error("PUT /api/trainee/{}update-trainers: Status code: 401 UnAuthenticated. Could not authenticate for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -216,17 +200,16 @@ public class TraineeController {
     @GetMapping("{username}/get-trainings")
     public ResponseEntity<?> getTraineeTrainings(@PathVariable String username,
                                                  @RequestParam LocalDate fromDate, @RequestParam LocalDate toDate, @RequestParam String trainingType) {
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Retrieve trainings initiated", transactionId, username);
+        log.info("GET /api/trainee/{}/get-trainings: Retrieve trainings initiated", username);
         try {
             List<Training> trainings = traineeService.getTrainings(username, traineeConverter.toCriteriaDto(fromDate, toDate, trainingType));
-            LOGGER.info("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Retrieve trainings was successful", transactionId, username);
+            log.info("GET /api/trainee/{}/get-trainings: Retrieve trainings was successful", username);
             return ResponseEntity.ok().body(trainings);
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Status code: 404. Training not found for username: {}", transactionId, username, username);
+            log.error("GET /api/trainee/{}/get-trainings: Status code: 404. Training not found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (AuthenticationException e) {
-            LOGGER.error("[Transaction id: {}] GET /api/trainee/{}/get-trainings: Status code: 401 UnAuthenticated. Could not authenticate for username: {}", transactionId, username, username);
+            log.error("GET /api/trainee/{}/get-trainings: Status code: 401 UnAuthenticated. Could not authenticate for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
@@ -239,17 +222,14 @@ public class TraineeController {
     @PatchMapping("{username}/change-status")
     public ResponseEntity<?> changeStatus(@PathVariable String username,
                                           @RequestBody Boolean newStatus){
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] PATCH /api/trainee/{}/change-status: Trainee change status initiated", transactionId, username);
+        log.info("PATCH /api/trainee/{}/change-status: Trainee change status initiated", username);
         try {
             traineeService.changeStatus(username, newStatus);
-            LOGGER.info("[Transaction id: {}] PATCH /api/trainee/{}/change-status: Status code: 200 OK. Status change for username: {}", transactionId, username, username);
+            log.info("PATCH /api/trainee/{}/change-status: Status code: 200 OK. Status change for username: {}", username, username);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] PATCH /api/trainee/{}/change-status: Status code: 404 Not found. No trainee found for username: {}", transactionId, username, username);
+            log.error("PATCH /api/trainee/{}/change-status: Status code: 404 Not found. No trainee found for username: {}", username, username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } finally {
-            TransactionLogger.clear();
         }
     }
 
@@ -263,16 +243,15 @@ public class TraineeController {
     public ResponseEntity addTraining(@RequestBody Training training,
                                       @PathVariable("username") String traineeUsername,
                                       @PathVariable("trainer_username") String trainerUsername){
-        String transactionId = TransactionLogger.getTransactionId();
-        LOGGER.info("[Transaction id: {}] POST /api/trainee/{}/add-training", transactionId, training);
+        log.info("POST /api/trainee/{}/add-training", training);
         try{
             TrainingEventDto trainingEventDto = trainingService.save(training, traineeUsername, trainerUsername);
-            LOGGER.info("Transaction id: {}] POST /api/trainee/{}/add-training Add training has been successful", transactionId, traineeUsername);
+            log.info("POST /api/trainee/{}/add-training Add training has been successful", traineeUsername);
             // Working with Training event
             addTrainingEvent(trainingEventDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(trainingEventDto);
         } catch (NotFoundException e) {
-            LOGGER.error("[Transaction id: {}] POST /api/trainee/{}/add training Add training has been failed", transactionId, traineeUsername);
+            log.error("POST /api/trainee/{}/add training Add training has been failed", traineeUsername);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
@@ -281,7 +260,7 @@ public class TraineeController {
         try{
             trainingEventClient.addTrainingEvent(trainingEventDto);
         } catch (FeignException e) {
-            log.warn("Tracking service is not available: " + e.getMessage());
+            log.warn("Tracking service is not available: {}", e.getMessage());
         }
     }
 

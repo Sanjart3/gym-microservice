@@ -18,7 +18,7 @@ public class FeignClientConfig {
     public RequestInterceptor requestInterceptor() {
         return template -> {
             String correlationId = MDC.get(CORRELATION_ID_HEADER_NAME);
-            if (correlationId != null) {
+            if (!correlationId.isBlank()){
                 template.header(CORRELATION_ID_HEADER_NAME, correlationId);
             }
         };
