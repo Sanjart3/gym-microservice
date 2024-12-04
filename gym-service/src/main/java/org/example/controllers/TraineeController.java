@@ -19,7 +19,6 @@ import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.example.services.TraineeService;
 import org.example.services.TrainingService;
-import org.example.services.impl.TrainingServiceImpl;
 import org.example.utils.ApiDescription;
 import org.example.exception.AuthenticationException;
 import org.example.exception.NotFoundException;
@@ -53,7 +52,7 @@ public class TraineeController {
     private final TrainingService trainingService;
 
     @Autowired
-    public TraineeController(TrainingEventClient trainingEventClient, TraineeConverter traineeConverter, TraineeService traineeService, TrainingServiceImpl trainingService) {
+    public TraineeController(TrainingEventClient trainingEventClient, TraineeConverter traineeConverter, TraineeService traineeService, TrainingService trainingService) {
         this.trainingEventClient = trainingEventClient;
         this.traineeConverter = traineeConverter;
         this.traineeService = traineeService;
