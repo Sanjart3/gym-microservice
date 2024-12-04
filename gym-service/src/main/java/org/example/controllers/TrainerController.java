@@ -15,9 +15,6 @@ import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.example.services.TrainerService;
 import org.example.utils.ApiDescription;
-import org.example.exception.AuthenticationException;
-import org.example.exception.NotFoundException;
-import org.example.exception.ValidatorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,14 +54,9 @@ public class TrainerController {
     @PostMapping("sign-up")
     public ResponseEntity<?> signUp(@Parameter(description = "Trainer details for sign-up") @RequestBody TrainerDto trainerDto) {
         log.info("POST /api/trainer/sign-up: Trainer sign-up initiated");
-        try {
-            AuthDto authDto = trainerService.save(converter.toEntity(trainerDto));
-            log.info("POST /api/trainer/sign-up: Status code: 201 Created. Trainer sign-up successful for username: {}", authDto.getUsername());
-            return ResponseEntity.status(HttpStatus.CREATED).body(authDto);
-        } catch (ValidatorException e) {
-            log.error("POST /api/trainer/sign-up: Status code: 400 Bad Request. Trainer sign-up failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        AuthDto authDto = trainerService.save(converter.toEntity(trainerDto));
+        log.info("POST /api/trainer/sign-up: Status code: 201 Created. Trainer sign-up successful for username: {}", authDto.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(authDto);
     }
 
     @Operation(summary = "Change trainer password")
@@ -78,14 +70,9 @@ public class TrainerController {
             @PathVariable("username") String username,
             @RequestBody PasswordChangeDto passwordChangeDto) {
         log.info("PUT /api/trainer/{}/change-password: Trainer change password initiated", username);
-        try {
-            trainerService.changePassword(passwordChangeDto);
-            log.info("PUT /api/trainer/{}/change-password: Status code: 200 OK. Trainer change password successful for username: {}", username, username);
-            return ResponseEntity.ok("Password changed successfully");
-        } catch (NotFoundException e) {
-            log.error("PUT /api/trainer/{}/change-password: Status code: 404 Not Found. Password change unsuccessful for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        trainerService.changePassword(passwordChangeDto);
+        log.info("PUT /api/trainer/{}/change-password: Status code: 200 OK. Trainer change password successful for username: {}", username, username);
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     @Operation(summary = "Get trainer profile")
@@ -97,14 +84,9 @@ public class TrainerController {
     public ResponseEntity<TrainerDto> profile(
             @PathVariable("username") String username) {
         log.info("GET /api/trainer/{}/profile: Trainer profile initiated", username);
-        try {
-            Trainer trainer = trainerService.findByUsername(username);
-            log.info("GET /api/trainer/{}/profile: Status code: 200 OK. Trainer profile successful for username: {}", username, username);
-            return ResponseEntity.ok(converter.toDto(trainer));
-        } catch (NotFoundException e) {
-            log.error("GET /api/trainer/{}/profile: Status code: 404 Not Found. Trainer profile not found for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        Trainer trainer = trainerService.findByUsername(username);
+        log.info("GET /api/trainer/{}/profile: Status code: 200 OK. Trainer profile successful for username: {}", username, username);
+        return ResponseEntity.ok(converter.toDto(trainer));
     }
 
     @Operation(summary = "Update trainer profile")
@@ -118,17 +100,9 @@ public class TrainerController {
             @PathVariable String username,
             @RequestBody TrainerUpdateRequestDto trainerUpdateRequestDto) {
         log.info("PUT /api/trainer/{}/update-profile: Trainer profile update initiated", username);
-        try {
-            Trainer trainer = trainerService.update(converter.fromTrainerUpdateRequestToTrainer(trainerUpdateRequestDto));
-            log.info("PUT /api/trainer/{}/update-profile: Status code: 200 OK. Trainer profile update successful for username: {}", username, username);
-            return ResponseEntity.ok(converter.toDto(trainer));
-        } catch (NotFoundException te) {
-            log.error("PUT /api/trainer/{}/update-profile: Status code: 404 Not Found. No trainer found for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } catch (ValidatorException e) {
-            log.error("PUT /api/trainer/{}/update-profile: Status code: 422 Unprocessable Entity. Not valid trainer to update for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(null);
-        }
+        Trainer trainer = trainerService.update(converter.fromTrainerUpdateRequestToTrainer(trainerUpdateRequestDto));
+        log.info("PUT /api/trainer/{}/update-profile: Status code: 200 OK. Trainer profile update successful for username: {}", username, username);
+        return ResponseEntity.ok(converter.toDto(trainer));
     }
 
     @Operation(summary = "Get Trainers Training List", description = ApiDescription.ONLY_LOGGED_IN_USER, tags = ApiDescription.TRAINER_TAG)
@@ -141,17 +115,9 @@ public class TrainerController {
     public ResponseEntity<?> getTrainerTrainings(@PathVariable String username,
                                                  @RequestParam LocalDate fromDate, @RequestParam LocalDate toDate, @RequestParam String trainingType) {
         log.info("GET /api/trainer/{}/get-trainings: Trainer trainings retrieval initiated", username);
-        try {
-            List<Training> trainings = trainerService.getTrainings(converter.toCriteriaDto(fromDate, toDate, trainingType), username);
-            log.info("GET /api/trainer/{}/get-trainings: Status code: 200 OK. Training list retrieve for username: {}", username, username);
-            return ResponseEntity.ok().body(trainings);
-        } catch (NotFoundException e) {
-            log.error("GET /api/trainer/{}/get-trainings: Status code: 404 Not found. Trainer not found for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (AuthenticationException ae){
-            log.error("GET /api/trainer/{}/get-trainings: Status code: 401 Unauthenticated. Could not authenticate for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ae.getMessage());
-        }
+        List<Training> trainings = trainerService.getTrainings(converter.toCriteriaDto(fromDate, toDate, trainingType), username);
+        log.info("GET /api/trainer/{}/get-trainings: Status code: 200 OK. Training list retrieve for username: {}", username, username);
+        return ResponseEntity.ok().body(trainings);
     }
 
     @Operation(summary = "Change trainer status")
@@ -164,13 +130,8 @@ public class TrainerController {
             @PathVariable String username,
             @RequestBody Boolean newStatus) {
         log.info("PATCH /api/trainer/{}/change-status: Trainer status change initiated", username);
-        try {
-            trainerService.changeStatus(username, newStatus);
-            log.info("PATCH /api/trainer/{}/change-status: Status code: 200 OK. Status change for username: {}", username, username);
-            return ResponseEntity.ok().build();
-        } catch (NotFoundException e) {
-            log.error("PATCH /api/trainer/{}/change-status: Status code: 404 Not found. No trainer found for username: {}", username, username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        trainerService.changeStatus(username, newStatus);
+        log.info("PATCH /api/trainer/{}/change-status: Status code: 200 OK. Status change for username: {}", username, username);
+        return ResponseEntity.ok().build();
     }
 }

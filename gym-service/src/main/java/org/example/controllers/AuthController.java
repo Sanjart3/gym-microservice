@@ -22,12 +22,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthDto authDto) throws Exception {
-        try {
-            log.info("Authenticating user: {}", authDto.getUsername());
-            userDetailsService.login(authDto);
-        } catch (AuthenticationException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
+        log.info("Authenticating user: {}", authDto.getUsername());
+        userDetailsService.login(authDto);
 
         final String jwt = userDetailsService.login(authDto);
 

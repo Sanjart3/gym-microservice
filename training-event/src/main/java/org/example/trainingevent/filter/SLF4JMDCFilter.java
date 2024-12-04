@@ -20,13 +20,23 @@ public class SLF4JMDCFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, FilterChain chain) {
         try {
-            MDC.put(MDC_UUID_TOKEN_KEY, UUID.randomUUID().toString());
+            String transactionID = getIdOrGenerate(request);
+            MDC.put(MDC_UUID_TOKEN_KEY, transactionID);
             chain.doFilter(request, response);
         } catch (Exception ex) {
             log.error("Exception occurred in filter while setting UUID for logs", ex);
         } finally {
             MDC.remove(MDC_UUID_TOKEN_KEY);
         }
+    }
+
+    private static String getIdOrGenerate(HttpServletRequest httpRequest) {
+        String id = httpRequest.getHeader(MDC_UUID_TOKEN_KEY);
+
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+        return id;
     }
 
     @Override
