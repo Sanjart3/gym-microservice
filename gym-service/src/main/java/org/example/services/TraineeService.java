@@ -1,6 +1,7 @@
 package org.example.services;
 
 import com.netflix.discovery.EurekaClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.enums.RoleType;
@@ -23,9 +24,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class TraineeService {
-
-    private static final Logger LOGGER = LogManager.getLogger(TraineeService.class);
 
     @Autowired
     private EurekaClient eurekaClient;
@@ -48,7 +48,7 @@ public class TraineeService {
         if (trainee.isPresent()) {
             return trainee.get();
         } else {
-            LOGGER.error("Trainee not found");
+            log.error("Trainee not found");
             throw new NotFoundException("Trainee", username);
         }
     }
@@ -83,10 +83,10 @@ public class TraineeService {
             trainee.getUser().setPassword(passwordEncoder.encode(password));
             trainee.getUser().setRole(RoleType.ROLE_TRAINEE);
             Trainee createdTrainee = traineeRepository.save(trainee);
-            LOGGER.info("Trainee created: {}", createdTrainee);
+            log.info("Trainee created: {}", createdTrainee);
             return new AuthDto(username, password);
         } catch (ValidatorException e) {
-            LOGGER.warn("Trainee not created: {}", trainee, e);
+            log.warn("Trainee not created: {}", trainee, e);
             throw e;
         }
     }
@@ -99,10 +99,10 @@ public class TraineeService {
                 Long id = traineeOptional.get().getId();
                 trainee.setId(id);
                 Trainee updatedTrainee = traineeRepository.save(trainee);
-                LOGGER.info("Trainee updated: {}", updatedTrainee);
+                log.info("Trainee updated: {}", updatedTrainee);
                 return updatedTrainee;
             } catch (ValidatorException e) {
-                LOGGER.warn("Trainee not updated: {}", trainee, e);
+                log.warn("Trainee not updated: {}", trainee, e);
                 throw e;
             }
         }

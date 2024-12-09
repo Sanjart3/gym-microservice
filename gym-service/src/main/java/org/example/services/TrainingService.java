@@ -3,6 +3,7 @@ package org.example.services;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.client.TrainingEventSender;
 import org.example.converters.TrainingConverter;
 import org.example.dto.training.TrainingEventDto;
 import org.example.repositories.TrainingRepository;
@@ -20,14 +21,22 @@ import java.util.List;
 @Service
 public class TrainingService {
 
-    private static final Logger LOGGER = LogManager.getLogger(TrainingService.class);
     @Autowired
     private TrainingRepository trainingRepository;
 
+    private TrainingEventSender trainingEventSender;
+
     private TraineeService traineeService;
+
     private TrainerService trainerService;
     private TrainingValidation trainingValidation;
     private TrainingConverter trainingConverter;
+
+    @Autowired
+    public void setTrainingEventSender(TrainingEventSender trainingEventSender) {
+        this.trainingEventSender = trainingEventSender;
+    }
+
     @Autowired
     public void setTrainingValidation(TrainingValidation trainingValidation) {
         this.trainingValidation = trainingValidation;
@@ -59,10 +68,12 @@ public class TrainingService {
             training.setTrainer(trainerService.findByUsername(trainerUsername));
             trainingValidation.isValidForCreate(training);  //checks for validation, and throws exception for invalid parameters
             Training savedTraining = trainingRepository.save(training);
-            LOGGER.info("Saved training: {}", savedTraining);
+            log.info("Saved training: {}", savedTraining);
+
+            sendEvent(trainingConverter.fromTrainingToTrainingEventDto(savedTraining)); // sending the event to training-event service
             return trainingConverter.fromTrainingToTrainingEventDto(savedTraining);
         } catch (ValidatorException e) {
-            LOGGER.warn("Invalid training: {}", training, e);
+            log.warn("Invalid training: {}", training, e);
             throw e;
         }
     }
@@ -81,5 +92,13 @@ public class TrainingService {
         log.debug("Training cancelled successfully with ID: {}", id);
 
         return trainingConverter.fromTrainingToTrainingEventDto(updatedTraining);
+    }
+
+    private void sendEvent(TrainingEventDto trainingEventDto) {
+        try{
+            trainingEventSender.sendEvent(trainingEventDto);
+        } catch (Exception e){
+            log.warn("Error while sending event: {}", trainingEventDto, e);
+        }
     }
 }

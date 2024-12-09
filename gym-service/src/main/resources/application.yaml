@@ -12,6 +12,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  activemq:
+    broker-url: tcp://localhost:61616
+    queue-name: gym-app-queue
 
 # Prometheus metrics
 management:
