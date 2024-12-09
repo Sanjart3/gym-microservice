@@ -85,6 +85,12 @@
             <version>2.6.0</version>
         </dependency>
 
+        <!--JMS APi-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-activemq</artifactId>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

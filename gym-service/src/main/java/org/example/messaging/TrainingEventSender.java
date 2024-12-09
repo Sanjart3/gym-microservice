@@ -1,4 +1,4 @@
-package org.example.client;
+package org.example.messaging;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package org.example.client;
+package org.example.messaging;
 
 import org.example.config.FeignClientConfig;
 import org.example.dto.training.TrainingEventDto;
