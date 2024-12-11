@@ -1,11 +1,11 @@
-package org.example.trainingevent.services;
+package org.example.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.trainingevent.dto.TrainerSummaryDto;
-import org.example.trainingevent.dto.TrainingEventsDto;
-import org.example.trainingevent.entities.TrainingEvents;
-import org.example.trainingevent.enums.ActionType;
-import org.example.trainingevent.repositories.TrainingEventRepository;
+import org.example.dto.TrainerSummaryDto;
+import org.example.externaldto.TrainingEventDto;
+import org.example.entities.TrainingEvents;
+import org.example.enums.ActionType;
+import org.example.repositories.TrainingEventRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +26,9 @@ public class TrainingService {
         this.modelMapper = modelMapper;
     }
 
-    public void saveTrainingEvent(TrainingEventsDto trainingEventsDto) {
-        log.debug("Saving training event: {}", trainingEventsDto);
-        TrainingEvents trainingEvents = modelMapper.map(trainingEventsDto, TrainingEvents.class);
+    public void saveTrainingEvent(TrainingEventDto trainingEventDto) {
+        log.debug("Saving training event: {}", trainingEventDto);
+        TrainingEvents trainingEvents = modelMapper.map(trainingEventDto, TrainingEvents.class);
 
         TrainingEvents savedTrainingEvent = trainingEventRepository.save(trainingEvents);
         log.debug("Saved training event with ID: {}", savedTrainingEvent.getId());

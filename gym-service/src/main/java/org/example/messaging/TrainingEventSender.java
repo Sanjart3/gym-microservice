@@ -2,7 +2,7 @@ package org.example.messaging;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.dto.training.TrainingEventDto;
+import org.example.externaldto.TrainingEventDto;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.JmsException;
@@ -18,11 +18,11 @@ public class TrainingEventSender {
 
     private final JmsTemplate jmsTemplate;
 
-    @Value("{spring.activemq.queue-name}")
+    @Value("${spring.activemq.queue-name}")
     private String queueName;
 
     public void sendEvent(TrainingEventDto trainingEventDto) {
-        log.debug("Sending message from queue {} : {}", queueName, trainingEventDto);
+        log.info("Sending message from queue {} : {}", queueName, trainingEventDto);
         try {
 
             jmsTemplate.convertAndSend(queueName, trainingEventDto, message -> {

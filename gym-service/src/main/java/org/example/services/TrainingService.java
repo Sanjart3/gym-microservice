@@ -3,7 +3,7 @@ package org.example.services;
 import lombok.extern.slf4j.Slf4j;
 import org.example.messaging.TrainingEventSender;
 import org.example.converters.TrainingConverter;
-import org.example.dto.training.TrainingEventDto;
+import org.example.externaldto.TrainingEventDto;
 import org.example.repositories.TrainingRepository;
 import org.example.entities.Training;
 import org.example.exception.NotFoundException;

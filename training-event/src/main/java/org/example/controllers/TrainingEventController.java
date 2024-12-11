@@ -1,12 +1,12 @@
-package org.example.trainingevent.controllers;
+package org.example.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import org.example.trainingevent.dto.TrainerSummaryDto;
-import org.example.trainingevent.dto.TrainingEventsDto;
-import org.example.trainingevent.services.TrainingService;
+import org.example.dto.TrainerSummaryDto;
+import org.example.externaldto.TrainingEventDto;
+import org.example.services.TrainingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,9 +29,9 @@ public class TrainingEventController {
             @ApiResponse(responseCode = "403", description = "Bad request")
     })
     @PostMapping
-    public ResponseEntity<String> addTrainingEvent(@RequestBody TrainingEventsDto trainingEventsDto) {
-        log.info("Add training event: {}", trainingEventsDto);
-        trainingService.saveTrainingEvent(trainingEventsDto);
+    public ResponseEntity<String> addTrainingEvent(@RequestBody TrainingEventDto trainingEventDto) {
+        log.info("Add training event: {}", trainingEventDto);
+        trainingService.saveTrainingEvent(trainingEventDto);
         return ResponseEntity.ok().build();
     }
 

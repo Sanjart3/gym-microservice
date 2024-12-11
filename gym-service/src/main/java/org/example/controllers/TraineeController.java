@@ -11,7 +11,7 @@ import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
 import org.example.dto.trainee.TraineeDto;
 import org.example.dto.trainee.TraineeUpdateRequestDto;
-import org.example.dto.training.TrainingEventDto;
+import org.example.externaldto.TrainingEventDto;
 import org.example.entities.Trainee;
 import org.example.entities.Trainer;
 import org.example.entities.Training;

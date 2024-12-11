@@ -5,7 +5,7 @@ import org.example.entities.Trainee;
 import org.example.entities.Trainer;
 import org.example.entities.TrainingType;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 @Data
 public class TrainingDto {
@@ -13,6 +13,6 @@ public class TrainingDto {
     private Trainer trainer;
     private String trainingName;
     private TrainingType trainingType;
-    private LocalDate trainingDate;
+    private Date trainingDate;
     private int trainingDuration;
 }

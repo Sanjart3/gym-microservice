@@ -1,4 +1,4 @@
-package org.example.trainingevent.filter;
+package org.example.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,23 +15,23 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class SLF4JMDCFilter extends OncePerRequestFilter {
-    private static final String MDC_UUID_TOKEN_KEY = "X-Correlation-ID";
+    public static final String CORRELATION_ID = "X-Correlation-Id";
 
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, FilterChain chain) {
         try {
             String transactionID = getIdOrGenerate(request);
-            MDC.put(MDC_UUID_TOKEN_KEY, transactionID);
+            MDC.put(CORRELATION_ID, transactionID);
             chain.doFilter(request, response);
         } catch (Exception ex) {
             log.error("Exception occurred in filter while setting UUID for logs", ex);
         } finally {
-            MDC.remove(MDC_UUID_TOKEN_KEY);
+            MDC.remove(CORRELATION_ID);
         }
     }
 
     private static String getIdOrGenerate(HttpServletRequest httpRequest) {
-        String id = httpRequest.getHeader(MDC_UUID_TOKEN_KEY);
+        String id = httpRequest.getHeader(CORRELATION_ID);
 
         if (id == null) {
             id = UUID.randomUUID().toString();
