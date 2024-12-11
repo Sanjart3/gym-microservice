@@ -2,8 +2,6 @@ package org.example.services;
 
 import com.netflix.discovery.EurekaClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.example.enums.RoleType;
 import org.example.repositories.TraineeRepository;
 import org.example.dto.AuthDto;
@@ -109,9 +107,10 @@ public class TraineeService {
         throw new NotFoundException("Trainee", username);
     }
 
-    public Boolean deleteByUsername(String username) {
+    public void deleteByUsername(String username) {
         if (traineeRepository.findByUsername(username).isPresent()) {
-            return traineeRepository.deleteByUser_Username(username);
+            traineeRepository.deleteByUser_Username(username);
+            return;
         }
         throw new NotFoundException("Trainee", username);
     }
