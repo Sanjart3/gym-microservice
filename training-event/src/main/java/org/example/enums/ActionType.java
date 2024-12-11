@@ -1,4 +1,4 @@
-package org.example.trainingevent.enums;
+package org.example.enums;
 
 public enum ActionType {
     ADD, DELETE

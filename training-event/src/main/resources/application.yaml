@@ -6,6 +6,9 @@ server:
 spring:
   application:
     name: training-event
+  activemq:
+    broker-url: tcp://localhost:61616
+    queue_name: gym-app-queue
 
   #Database
   datasource:

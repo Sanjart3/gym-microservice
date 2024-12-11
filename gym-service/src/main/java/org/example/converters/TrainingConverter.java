@@ -2,7 +2,7 @@ package org.example.converters;
 
 import org.example.dto.training.TrainingCreateRequest;
 import org.example.dto.training.TrainingDto;
-import org.example.dto.training.TrainingEventDto;
+import org.example.externaldto.TrainingEventDto;
 import org.example.entities.Trainer;
 import org.example.entities.Training;
 import org.modelmapper.ModelMapper;
@@ -35,7 +35,7 @@ public class TrainingConverter extends AbstractConverter<Training, TrainingDto> 
         trainingEvent.setTrainerLastName(trainer.getUser().getLastName());
         trainingEvent.setTrainingDate(training.getTrainingDate());
         trainingEvent.setTrainingDuration(training.getTrainingDuration());
-        trainingEvent.setIsActive(trainer.getUser().getIsActive());
+        trainingEvent.setActive(trainer.getUser().getIsActive());
         return trainingEvent;
     }
 

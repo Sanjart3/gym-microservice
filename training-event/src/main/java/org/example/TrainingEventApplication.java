@@ -1,4 +1,4 @@
-package org.example.trainingevent;
+package org.example;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

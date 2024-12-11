@@ -1,4 +1,4 @@
-package org.example.trainingevent.dto;
+package org.example.dto;
 
 import lombok.Data;
 

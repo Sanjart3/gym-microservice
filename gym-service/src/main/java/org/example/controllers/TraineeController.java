@@ -1,19 +1,17 @@
 package org.example.controllers;
 
-import feign.FeignException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.example.client.TrainingEventClient;
 import org.example.converters.TraineeConverter;
 import org.example.dto.AuthDto;
 import org.example.dto.PasswordChangeDto;
 import org.example.dto.trainee.TraineeDto;
 import org.example.dto.trainee.TraineeUpdateRequestDto;
-import org.example.dto.training.TrainingEventDto;
+import org.example.externaldto.TrainingEventDto;
 import org.example.entities.Trainee;
 import org.example.entities.Trainer;
 import org.example.entities.Training;
@@ -43,14 +41,12 @@ import java.util.List;
 @RequestMapping(value = "/api/trainee", produces = {"application/json", "application/XML"})
 @Tag(name = ApiDescription.TRAINEE_TAG, description = "The trainee api")
 public class TraineeController {
-    private final TrainingEventClient trainingEventClient;
     private final TraineeConverter traineeConverter;
     private final TraineeService traineeService;
     private final TrainingService trainingService;
 
     @Autowired
-    public TraineeController(TrainingEventClient trainingEventClient, TraineeConverter traineeConverter, TraineeService traineeService, TrainingService trainingService) {
-        this.trainingEventClient = trainingEventClient;
+    public TraineeController(TraineeConverter traineeConverter, TraineeService traineeService, TrainingService trainingService) {
         this.traineeConverter = traineeConverter;
         this.traineeService = traineeService;
         this.trainingService = trainingService;
@@ -188,17 +184,7 @@ public class TraineeController {
         log.info("POST /api/trainee/{}/add-training", training);
         TrainingEventDto trainingEventDto = trainingService.save(training, traineeUsername, trainerUsername);
         log.info("POST /api/trainee/{}/add-training Add training has been successful", traineeUsername);
-        // Working with Training event
-        addTrainingEvent(trainingEventDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(trainingEventDto);
-    }
-
-    public void addTrainingEvent(TrainingEventDto trainingEventDto){
-        try{
-            trainingEventClient.addTrainingEvent(trainingEventDto);
-        } catch (FeignException e) {
-            log.warn("Tracking service is not available: {}", e.getMessage());
-        }
     }
 
     @DeleteMapping("/{username}/training")

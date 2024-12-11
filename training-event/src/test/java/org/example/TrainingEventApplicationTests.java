@@ -1,10 +1,10 @@
-package org.example.trainingevent;
+package org.example;
 
-import org.example.trainingevent.dto.TrainingEventsDto;
-import org.example.trainingevent.entities.TrainingEvents;
-import org.example.trainingevent.enums.ActionType;
-import org.example.trainingevent.repositories.TrainingEventRepository;
-import org.example.trainingevent.services.TrainingService;
+import org.example.externaldto.TrainingEventDto;
+import org.example.entities.TrainingEvents;
+import org.example.enums.ActionType;
+import org.example.repositories.TrainingEventRepository;
+import org.example.services.TrainingService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,12 +34,12 @@ class TrainingEventApplicationTests {
 
     @Test
     void testCreate() {
-        TrainingEventsDto trainingEventDTO = new TrainingEventsDto();
+        TrainingEventDto trainingEventDTO = new TrainingEventDto();
         trainingEventDTO.setTrainerUsername("johndoe");
         trainingEventDTO.setTrainerFirstName("John");
         trainingEventDTO.setTrainerLastName("Doe");
-        trainingEventDTO.setIsActive(true);
-        trainingEventDTO.setTrainingDate(LocalDate.now());
+        trainingEventDTO.setActive(true);
+        trainingEventDTO.setTrainingDate(new Date(String.valueOf(LocalDate.now())));
         trainingEventDTO.setTrainingDuration(2);
         trainingEventDTO.setActionType(ActionType.ADD.toString());
 

@@ -1,4 +1,4 @@
-package org.example.trainingevent.config;
+package org.example.config;
 
 import org.modelmapper.Condition;
 import org.modelmapper.Conditions;
