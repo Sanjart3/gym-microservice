@@ -1,14 +1,16 @@
 package org.example.repositories;
 
 
-import org.example.entities.TrainingEvents;
-import org.example.enums.ActionType;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.example.entities.TrainerSummary;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface TrainingEventRepository extends JpaRepository<TrainingEvents, Long> {
-    List<TrainingEvents> findAllByActionType(ActionType action);
+public interface TrainingEventRepository extends MongoRepository<TrainerSummary, Long> {
+
+    TrainerSummary findByUsernameEquals(String username);
+
+    List<TrainerSummary> getAllBy();
 }

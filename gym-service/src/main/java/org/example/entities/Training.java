@@ -3,7 +3,8 @@ package org.example.entities;
 import lombok.Data;
 
 import jakarta.persistence.*;
-import java.util.Date;
+
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -30,7 +31,7 @@ public class Training {
     private TrainingType trainingType;
 
     @Column(name = "training_date", nullable = false)
-    private Date trainingDate;
+    private LocalDate trainingDate;
 
     @Column(name = "training_duration", nullable = false)
     private int trainingDuration;
@@ -39,9 +40,9 @@ public class Training {
     private Boolean isDeleted;
 
     @Column(name = "deleted_date")
-    private Date deletedDate;
+    private LocalDate deletedDate;
 
-    public Training(Long id, Trainee trainee, Trainer trainer, String trainingName, TrainingType trainingType, Date trainingDate, int trainingDuration) {
+    public Training(Long id, Trainee trainee, Trainer trainer, String trainingName, TrainingType trainingType, LocalDate trainingDate, int trainingDuration) {
         this.id = id;
         this.trainee = trainee;
         this.trainer = trainer;
@@ -51,7 +52,7 @@ public class Training {
         this.trainingDuration = trainingDuration;
     }
 
-    public Training(Trainee trainee, Trainer trainer, String trainingName, TrainingType trainingType, Date trainingDate, int trainingDuration) {
+    public Training(Trainee trainee, Trainer trainer, String trainingName, TrainingType trainingType, LocalDate trainingDate, int trainingDuration) {
         this.trainee = trainee;
         this.trainer = trainer;
         this.trainingName = trainingName;

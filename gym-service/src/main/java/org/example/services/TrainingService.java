@@ -12,7 +12,7 @@ import org.example.utils.validation.impl.TrainingValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -83,7 +83,7 @@ public class TrainingService {
                 .orElseThrow(()-> new NotFoundException("Training", id+""));
 
         training.setIsDeleted(true);
-        training.setDeletedDate(new Date());
+        training.setDeletedDate(LocalDate.now());
 
         Training updatedTraining = trainingRepository.save(training);
 

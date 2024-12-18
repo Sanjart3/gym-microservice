@@ -1,12 +1,14 @@
 package org.example;
 
 import org.example.externaldto.TrainingEventDto;
-import org.example.entities.TrainingEvents;
+import org.example.entities.TrainerSummary;
 import org.example.enums.ActionType;
 import org.example.repositories.TrainingEventRepository;
 import org.example.services.TrainingService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -15,10 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.Optional;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
@@ -29,36 +31,48 @@ class TrainingEventApplicationTests {
 
     @Mock
     private ModelMapper modelMapper;
-    @Autowired
+
+    @InjectMocks
     private TrainingService trainingService;
 
-    @Test
+    TrainerSummary trainerSummary;
+    TrainingEventDto trainingEventDto;
+
+    @BeforeEach
     void testCreate() {
-        TrainingEventDto trainingEventDTO = new TrainingEventDto();
-        trainingEventDTO.setTrainerUsername("johndoe");
-        trainingEventDTO.setTrainerFirstName("John");
-        trainingEventDTO.setTrainerLastName("Doe");
-        trainingEventDTO.setActive(true);
-        trainingEventDTO.setTrainingDate(new Date(String.valueOf(LocalDate.now())));
-        trainingEventDTO.setTrainingDuration(2);
-        trainingEventDTO.setActionType(ActionType.ADD.toString());
+        trainingEventDto = new TrainingEventDto();
+        trainingEventDto.setTrainerUsername("johndoe");
+        trainingEventDto.setTrainerFirstName("John");
+        trainingEventDto.setTrainerLastName("Doe");
+        trainingEventDto.setActive(true);
+        trainingEventDto.setTrainingDate(LocalDate.now());
+        trainingEventDto.setTrainingDuration(2);
+        trainingEventDto.setActionType(ActionType.ADD.toString());
 
-        TrainingEvents trainingEvent = new TrainingEvents();
-        trainingEvent.setId(1L);
-        trainingEvent.setTrainerUsername("johndoe");
-        trainingEvent.setTrainerFirstName("John");
-        trainingEvent.setTrainerLastName("Doe");
-        trainingEvent.setIsActive(true);
-        trainingEvent.setTrainingDate(LocalDate.now());
-        trainingEvent.setTrainingDuration(2);
-        trainingEvent.setActionType(ActionType.ADD);
+        trainerSummary = new TrainerSummary();
+        trainerSummary.setUsername("johndoe");
+    }
 
-        when(modelMapper.map(trainingEventDTO, TrainingEvents.class)).thenReturn(trainingEvent);
-        when(trainingEventRepository.save(trainingEvent)).thenReturn(trainingEvent);
+    @Test
+    void create_whenTrainerSummaryExists_addsDurationAndSaves() {
+        when(trainingEventRepository.findByUsernameEquals("trainer123")).thenReturn(trainerSummary);
+        when(trainingEventRepository.save(trainerSummary)).thenReturn(trainerSummary);
 
-        trainingService.saveTrainingEvent(trainingEventDTO);
+        trainingService.saveTrainingEvent(trainingEventDto);
 
-        verify(modelMapper, times(1)).map(trainingEventDTO, TrainingEvents.class);
-        verify(trainingEventRepository, times(1)).save(trainingEvent);
+        verify(trainingEventRepository).save(any(TrainerSummary.class));
+        verify(modelMapper, never()).map(trainingEventDto, any(TrainerSummary.class));
+    }
+
+    @Test
+    void create_whenTrainerSummaryNotExists_convertsAndSaves() {
+        when(trainingEventRepository.findByUsernameEquals("trainer123")).thenReturn(null);
+        when(modelMapper.map(trainerSummary, TrainerSummary.class)).thenReturn(trainerSummary);
+        when(trainingEventRepository.save(trainerSummary)).thenReturn(trainerSummary);
+
+        trainingService.saveTrainingEvent(trainingEventDto);
+
+        verify(trainingEventRepository).save(trainerSummary);
+        verify(modelMapper).map(trainingEventDto, TrainingEventDto.class);
     }
 }
