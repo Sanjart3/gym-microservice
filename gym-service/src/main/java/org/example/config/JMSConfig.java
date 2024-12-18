@@ -1,7 +1,9 @@
 package org.example.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class JMSConfig {
     @Value("${spring.activemq.broker-url}")
     private String BROKER_URL;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
@@ -39,7 +44,8 @@ public class JMSConfig {
     public MessageConverter jacksonJmsMessageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setTargetType(MessageType.TEXT);
-        converter.setTypeIdPropertyName("_type");
+        converter.setTypeIdPropertyName("receiving_message_type");
+        converter.setObjectMapper(objectMapper);
         return converter;
     }
 

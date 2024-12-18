@@ -1,7 +1,7 @@
 package org.example;
 
 import org.example.externaldto.TrainingEventDto;
-import org.example.entities.TrainingEvents;
+import org.example.entities.TrainerSummary;
 import org.example.enums.ActionType;
 import org.example.repositories.TrainingEventRepository;
 import org.example.services.TrainingService;
@@ -43,22 +43,22 @@ class TrainingEventApplicationTests {
         trainingEventDTO.setTrainingDuration(2);
         trainingEventDTO.setActionType(ActionType.ADD.toString());
 
-        TrainingEvents trainingEvent = new TrainingEvents();
+        TrainerSummary trainingEvent = new TrainerSummary();
         trainingEvent.setId(1L);
-        trainingEvent.setTrainerUsername("johndoe");
-        trainingEvent.setTrainerFirstName("John");
-        trainingEvent.setTrainerLastName("Doe");
+        trainingEvent.setUsername("johndoe");
+        trainingEvent.setFirstName("John");
+        trainingEvent.setLastName("Doe");
         trainingEvent.setIsActive(true);
         trainingEvent.setTrainingDate(LocalDate.now());
         trainingEvent.setTrainingDuration(2);
         trainingEvent.setActionType(ActionType.ADD);
 
-        when(modelMapper.map(trainingEventDTO, TrainingEvents.class)).thenReturn(trainingEvent);
+        when(modelMapper.map(trainingEventDTO, TrainerSummary.class)).thenReturn(trainingEvent);
         when(trainingEventRepository.save(trainingEvent)).thenReturn(trainingEvent);
 
         trainingService.saveTrainingEvent(trainingEventDTO);
 
-        verify(modelMapper, times(1)).map(trainingEventDTO, TrainingEvents.class);
+        verify(modelMapper, times(1)).map(trainingEventDTO, TrainerSummary.class);
         verify(trainingEventRepository, times(1)).save(trainingEvent);
     }
 }
