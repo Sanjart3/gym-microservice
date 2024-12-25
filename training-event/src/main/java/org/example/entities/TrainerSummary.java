@@ -29,7 +29,7 @@ public class TrainerSummary {
     private Boolean isActive;
 
     @Field("yearlySummaries")
-    private Map<Integer, Map<Integer, Integer>> yearlySummary;
+    private Map<Integer, Map<Integer, Integer>> yearlySummary = new HashMap<>();
 
     public void addTraining(LocalDate date, @Positive int duration){
         int year = date.getYear();
