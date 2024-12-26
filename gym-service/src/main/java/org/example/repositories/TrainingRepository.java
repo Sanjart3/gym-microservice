@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface TrainingRepository extends JpaRepository<Training, Long> {
     Optional<Training> findTrainingByTraineeUserUsernameAndId(String username, Long id);
+    void deleteAllByTrainingName(String trainingName);
 }
