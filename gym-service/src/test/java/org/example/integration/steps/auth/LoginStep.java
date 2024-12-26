@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.services.JWTService;
 
+import java.io.UnsupportedEncodingException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -53,9 +55,26 @@ public class LoginStep {
         System.out.println(mvcResult.getResponse().getContentAsString());
     }
 
+    @When("I send a POST request to {string} with invalid credentials: username: {string}, password: {string}")
+    public void UserLoginWithInvalidCredentials(String url, String username, String password) throws Exception {
+        JSONObject request = new JSONObject();
+        request.put("username", username);
+        request.put("password", password);
+
+        this.mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(url)
+                        .content(request.toString())
+                        .contentType("application/json"))
+                .andReturn();
+    }
+
     @Then("the response status should be {int}")
     public void theResponseStatusForLoginShouldBe(int status) {
         assertEquals(status, mvcResult.getResponse().getStatus());
+    }
+
+    @Then("the response body should contain an error message {string}")
+    public void theResponseBodyShouldContainAnErrorMessage(String message) throws UnsupportedEncodingException {
+        assertEquals(message, mvcResult.getResponse().getContentAsString());
     }
 
     @And("the response body should contain a valid JWT token")

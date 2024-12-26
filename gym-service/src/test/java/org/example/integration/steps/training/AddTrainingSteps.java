@@ -6,10 +6,8 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -23,10 +21,9 @@ import org.example.repositories.TrainerRepository;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.example.integration.util.Constants.AUTHORIZATION_HEADER;
 import static org.example.integration.util.Constants.CONTENT_TYPE_JSON;
+import static org.junit.jupiter.api.Assertions.*;
 
 @RequiredArgsConstructor
 public class AddTrainingSteps {
@@ -34,8 +31,7 @@ public class AddTrainingSteps {
     private final TrainerRepository trainerRepository;
     private final TestContext testContext;
     private final MockMvc mockMvc;
-    @MockBean
-    private final JmsTemplate jmsTemplate;
+
 
     private final String TRAINEE_TRAINING_LIST_URL = "/trainee/training";
 
@@ -47,6 +43,13 @@ public class AddTrainingSteps {
         Optional<Trainer> trainerOptional = trainerRepository.findByUser_Username(trainerUsername);
 
         assertTrue(trainerOptional.isPresent());
+    }
+
+    @Given("the training list are assigned to trainee {string} with trainingId")
+    public void theTrainingIsNotAssignedToTraineeWithTrainingId(String traineeUsername) {
+        Optional<Trainee> traineeOptional = traineeRepository.findTraineeByUser_Username(traineeUsername);
+
+        assertTrue(traineeOptional.isPresent());
     }
 
     @When("the trainee requests to add training with: trainerUsername {string}, duration {string}, date {string}, trainingName {string}")

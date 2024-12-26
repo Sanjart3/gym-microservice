@@ -16,7 +16,6 @@ Feature: User Authentication
     And the response body should contain a valid JWT token
 
   Scenario: Login with invalid credentials
-    Given the authentication service is operational
-    When I send a POST request to "/auth/login" with invalid credentials
+    When I send a POST request to "/auth/login" with invalid credentials: username: "lala", password: "Lala123"
     Then the response status should be 401
     And the response body should contain an error message "Invalid username or password"
