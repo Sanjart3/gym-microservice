@@ -111,7 +111,8 @@ public class TraineeService {
 
     public Boolean deleteByUsername(String username) {
         if (traineeRepository.findByUsername(username).isPresent()) {
-            return traineeRepository.deleteByUser_Username(username);
+            traineeRepository.deleteByUser_Username(username);
+            return true;
         }
         throw new NotFoundException("Trainee", username);
     }

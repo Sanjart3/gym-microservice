@@ -2,7 +2,6 @@ package org.example.repositories;
 
 import org.example.entities.Trainee;
 import org.example.entities.Trainer;
-import org.example.entities.Training;
 import org.example.repositories.training.UserTrainingRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,9 +21,9 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long>, UserTra
             "(SELECT tr FROM Trainee t JOIN Trainer tr JOIN User u WHERE u.username = :username)")
     List<Trainer> findUnAssignedTrainersByUsername(@Param("username") String username);
 
-    Optional<Trainee> findTraineeByUser_UsernameAndUser_Password(String username, String password);
-
-    Boolean deleteByUser_Username(String username);
+    Optional<Trainee> findTraineeByUser_Username(String username);
 
     Long countByUser_UsernameStartsWith(String username);
+
+    void deleteByUser_Username(String username);
 }

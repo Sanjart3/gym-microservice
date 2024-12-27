@@ -3,6 +3,8 @@ package org.example.entities;
 import lombok.Data;
 
 import jakarta.persistence.*;
+import lombok.ToString.Exclude;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,6 +31,10 @@ public class Trainee {
             inverseJoinColumns = @JoinColumn(name = "trainer_id")
     )
     private List<Trainer> trainers;
+
+    @OneToMany(mappedBy = "trainee", cascade = {CascadeType.REMOVE, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @Exclude
+    private List<Training> trainings;
 
 
     public Trainee(Long id, LocalDate dateOfBirth, String address, User user) {

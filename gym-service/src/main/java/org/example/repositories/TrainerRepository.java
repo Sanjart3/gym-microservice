@@ -15,7 +15,7 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long>, UserTra
 
     Long findIdByUser_Username(String username);
 
-    Optional<Trainer> findByUser_UsernameAndUser_Password(String username, String password);
-
     Long countByUser_UsernameStartsWith(String username);
+
+    void deleteByUser_Username(String username);
 }
